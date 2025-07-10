@@ -27,6 +27,10 @@ export class TableDefinition {
     this.name = name;
     this.columns = columns;
   }
+
+  build() {
+    return `${this.database}.${this.schema}.${this.name}`;
+  }
 }
 
 export class Column {

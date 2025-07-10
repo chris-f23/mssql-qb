@@ -47,7 +47,9 @@ describe("Select", () => {
           Fn.GETDATE()
         ).as("personAge");
 
-        const fullAddress = Fn.CONCAT(address.line, ", ", address.city);
+        const fullAddress = Fn.CONCAT(address.line, ", ", address.city).as(
+          "fullAddress"
+        );
 
         return [personId, personFullname, personAge, fullAddress];
       })
@@ -72,13 +74,13 @@ describe("Select", () => {
       });
 
     expect(qb.build()).toEqual(
-      "SELECT person.id AS personId, " +
-        "UPPER(CONCAT(person.name, ' ', person.lastname)) AS personFullname, " +
-        "DATEDIFF(year, person.birthdate, GETDATE()) AS personAge, " +
-        "CONCAT(address.line, ', ', address.city) AS fullAddress " +
+      "SELECT person.Id AS personId, " +
+        "UPPER(CONCAT(person.Name, ' ', person.Lastname)) AS personFullname, " +
+        "DATEDIFF(year, person.DateOfBirth, GETDATE()) AS personAge, " +
+        "CONCAT(address.Line, ', ', address.City) AS fullAddress " +
         "FROM MAIN_DB.dbo.Person AS person " +
-        "JOIN MAIN_DB.dbo.Address AS address ON person.id = address.personId " +
-        "WHERE person.birthdate > '2000-01-01' AND person.birthdate < '2020-01-01'"
+        "JOIN MAIN_DB.dbo.Address AS address ON person.Id = address.PersonId " +
+        "WHERE person.DateOfBirth > '2000-01-01' AND person.DateOfBirth < '2020-01-01'"
     );
   });
 });

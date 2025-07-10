@@ -11,6 +11,10 @@ export class Comparison {
     this.operator = operator;
     this.rightRef = rightRef;
   }
+
+  build() {
+    return `${this.leftRef.build()} ${this.operator} ${this.rightRef.build()}`;
+  }
 }
 
 export class Condition {
@@ -23,5 +27,9 @@ export class Condition {
     this.leftRef = leftComparisonOrCondition;
     this.operator = operator;
     this.rightRef = rightComparisonOrCondition;
+  }
+
+  build() {
+    return `${this.leftRef.build()} ${this.operator} ${this.rightRef.build()}`;
   }
 }

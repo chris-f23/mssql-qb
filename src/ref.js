@@ -1,5 +1,5 @@
 export class Ref {
-  /** @type {string} */
+  /** @private @type {string} */
   value;
 
   /**
@@ -11,6 +11,10 @@ export class Ref {
 
   as(alias) {
     return new Ref(`${this.value} AS ${alias}`);
+  }
+
+  build() {
+    return this.value;
   }
 }
 
