@@ -1,5 +1,5 @@
 import { Column, TableDefinition } from "./table-definition";
-import { Fn } from "./fn";
+import { Ref } from "./ref";
 
 /**
  * @template {Record<string, TableDefinition>} Source
@@ -19,15 +19,14 @@ export class SelectBuilder {
   }
 
   /**
-   * @param {Selector<Source>} selector
+   * @param {(source: SourceTables<Source>) => Array<Ref>} selectCallback
    */
-  select(selector) {
+  select(selectCallback) {
     return this;
   }
 
   /**
    * @param {keyof Source} mainTable
-   * @returns
    */
   from(mainTable) {
     return this;
@@ -35,19 +34,20 @@ export class SelectBuilder {
 
   /**
    * @param {keyof Source} otherTable
-   * @param {Predicate<Source>} predicate
+   * @param {(source: SourceTables<Source>) => SeachCondition} joinCallback
    */
-  join(otherTable, predicate) {
+  join(otherTable, joinCallback) {
     return this;
   }
 
-  // /**
-  //  * @template {string & keyof Source} TableAlias
-  //  * @template {keyof Source[TableAlias]["columns"]} TableColumn
-  //  * @param {TableAlias} tableAlias
-  //  * @param {TableColumn[]} tableColumns
-  //  */
-  // select(tableAlias, tableColumns) {
-  //   this.selection[tableAlias] = tableColumns;
-  // }
+  /**
+   * @param {(source: SourceTables<Source>) => SeachCondition} whereCallback
+   */
+  where(whereCallback) {
+    return this;
+  }
+
+  build() {
+    return "WIP";
+  }
 }

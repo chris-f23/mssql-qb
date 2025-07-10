@@ -5,7 +5,7 @@ export class Fn {
    * @param  {...Ref|string} params
    * @returns
    */
-  static concat(...params) {
+  static CONCAT(...params) {
     return new Ref(
       params
         .map((param) => {
@@ -24,11 +24,15 @@ export class Fn {
    * @param {Ref} startDate
    * @param {Ref} endDate
    */
-  static datediff(datePart, startDate, endDate) {
+  static DATEDIFF(datePart, startDate, endDate) {
     return new Ref(`DATEDIFF(${datePart}, ${startDate}, ${endDate})`);
   }
 
-  static getdate() {
+  static GETDATE() {
     return new Ref("GETDATE()");
+  }
+
+  static UPPER(str) {
+    return new Ref(`UPPER(${str})`);
   }
 }
