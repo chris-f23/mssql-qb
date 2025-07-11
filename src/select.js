@@ -47,7 +47,7 @@ export class SelectBuilder {
   }
 
   /**
-   * @param {(source: SourceTables<Source>) => Array<Ref>} selectCallback
+   * @param {SelectCallback<Source>} selectCallback
    */
   select(selectCallback) {
     if (this.#selection !== null) {
@@ -83,7 +83,7 @@ export class SelectBuilder {
 
   /**
    * @param {keyof Source} secondaryTable
-   * @param {(source: SourceTables<Source>) => SeachCondition} joinCallback
+   * @param {JoinCallback<Source>} joinCallback
    */
   join(secondaryTable, joinCallback) {
     if (this.#mainTable === null) {
@@ -102,7 +102,7 @@ export class SelectBuilder {
   }
 
   /**
-   * @param {(source: SourceTables<Source>) => SeachCondition} whereCallback
+   * @param {WhereCallback<Source>} whereCallback
    */
   where(whereCallback) {
     if (this.#mainTable === null) {

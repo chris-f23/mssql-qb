@@ -9,6 +9,14 @@ type SeachCondition =
   | import("./search-condition").Comparison
   | import("./search-condition").Condition;
 
+type SelectCallback<TSource> = (
+  source: SourceTables<TSource>
+) => Array<import("./ref").Ref>;
+
+type JoinCallback<TSource> = (source: SourceTables<TSource>) => SeachCondition;
+
+type WhereCallback<TSource> = (source: SourceTables<TSource>) => SeachCondition;
+
 type ComparisonOperator = "=" | ">" | "<" | ">=" | "<=" | "!=";
 type LogicalOperator = "AND" | "OR";
 
