@@ -1,3 +1,5 @@
+import { Comparison } from "./search-condition";
+
 export class Ref {
   /** @private @type {string} */
   value;
@@ -9,12 +11,36 @@ export class Ref {
     this.value = value;
   }
 
+  /**
+   * @param {string} alias 
+   */
   as(alias) {
     return new Ref(`${this.value} AS ${alias}`);
   }
 
   build() {
     return this.value;
+  }
+
+  /**
+   * @param {Ref} otherRef
+   */
+  $isEqualTo(otherRef) {
+    return new Comparison(this, "=", otherRef);
+  }
+
+  /**
+   * @param {Ref} otherRef
+   */
+  $isGreaterThan(otherRef) {
+    return new Comparison(this, ">", otherRef);
+  }
+
+  /**
+   * @param {Ref} otherRef
+   */
+  $isLessThan(otherRef) {
+    return new Comparison(this, "<", otherRef);
   }
 }
 
