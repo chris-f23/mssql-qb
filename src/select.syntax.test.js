@@ -38,7 +38,7 @@ const expectedQuery =
   "JOIN MAIN_DB.dbo.Address AS address ON person.Id = address.PersonId " +
   "WHERE person.DateOfBirth > '2000-01-01' AND person.DateOfBirth < '2020-01-01'";
 
-describe("Select", () => {
+describe("SelectBuilder - SYNTAX", () => {
   it("Debe construir la consulta esperada usando encadenamiento de métodos", () => {
     const qb = new SelectBuilder({
       person: personTable,

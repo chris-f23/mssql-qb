@@ -7,7 +7,7 @@
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --detectOpenHandles --verbose"
   },
-  "author": "",
+  "author": "Christian Farías Águila",
   "license": "GPL-3.0-only",
   "devDependencies": {
     "@jest/globals": "^29.7.0",
