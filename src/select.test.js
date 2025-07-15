@@ -105,6 +105,54 @@ describe("SelectBuilder - SELECT", () => {
 
     expect(qb.build()).toEqual(expectedQuery);
   });
+
+  it("Debe seleccionar 10 registros", () => {
+    const expectedQuery =
+      "SELECT TOP (10) pac.Identificador FROM BD_PRINCIPAL.dbo.Paciente AS pac";
+    const qb = new SelectBuilder({ pac: pacienteTable })
+      .select(({ pac }) => [pac.id])
+      .top(10)
+      .from("pac");
+
+    expect(qb.build()).toEqual(expectedQuery);
+  });
+
+  it("Debe seleccionar el 50% de los registros", () => {
+    const expectedQuery =
+      "SELECT TOP (50) PERCENT pac.Identificador " +
+      "FROM BD_PRINCIPAL.dbo.Paciente AS pac";
+    const qb = new SelectBuilder({ pac: pacienteTable })
+      .select(({ pac }) => [pac.id])
+      .top(50, "PERCENT")
+      .from("pac");
+
+    expect(qb.build()).toEqual(expectedQuery);
+  });
+
+  it("Debe seleccionar los distintos nombres", () => {
+    const expectedQuery =
+      "SELECT DISTINCT pac.Nombre FROM BD_PRINCIPAL.dbo.Paciente AS pac";
+
+    const qb = new SelectBuilder({ pac: pacienteTable })
+      .select(({ pac }) => [pac.nombre])
+      .distinct()
+      .from("pac");
+
+    expect(qb.build()).toEqual(expectedQuery);
+  });
+
+  it("Debe seleccionar 3 nombres distintos", () => {
+    const expectedQuery =
+      "SELECT DISTINCT TOP (3) pac.Nombre FROM BD_PRINCIPAL.dbo.Paciente AS pac";
+
+    const qb = new SelectBuilder({ pac: pacienteTable })
+      .select(({ pac }) => [pac.nombre])
+      .distinct()
+      .top(3)
+      .from("pac");
+
+    expect(qb.build()).toEqual(expectedQuery);
+  });
 });
 
 describe("SelectBuilder - WHERE", () => {

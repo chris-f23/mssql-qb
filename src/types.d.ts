@@ -7,6 +7,8 @@ type SourceTables<TSource> = {
   };
 };
 
+type SelectTopMode = "PERCENT" | "WITH TIES"
+
 type SeachCondition =
   | import("./search-condition").Comparison
   | import("./search-condition").Condition;

@@ -8,6 +8,12 @@ export class SelectBuilder {
   /** @type {null | Array<Ref>} */
   #selection = null;
 
+  /** @type {null | { value: number, mode: SelectTopMode | undefined }} */
+  #top = null;
+
+  /** @type {null | true } */
+  #distinct = null;
+
   /** @type {null | keyof Source} */
   #mainTable = null;
 
@@ -62,6 +68,23 @@ export class SelectBuilder {
     }
 
     this.#selection = selection;
+    return this;
+  }
+
+  /**
+   * @param {number} value
+   * @param {SelectTopMode} [mode]
+   */
+  top(value, mode) {
+    this.#top = {
+      value: value,
+      mode: mode,
+    };
+    return this;
+  }
+
+  distinct() {
+    this.#distinct = true;
     return this;
   }
 
@@ -127,7 +150,19 @@ export class SelectBuilder {
     }
     const statements = [];
 
-    const selectStatement = `SELECT ${this.#selection
+    let topOption = "";
+    if (this.#top) {
+      topOption = `TOP (${this.#top.value}) ${
+        this.#top.mode ? this.#top.mode + " " : ""
+      }`;
+    }
+
+    let distinctOption = "";
+    if (this.#distinct === true) {
+      distinctOption = "DISTINCT ";
+    }
+
+    const selectStatement = `SELECT ${distinctOption}${topOption}${this.#selection
       .map((ref) => ref.build())
       .join(", ")}`;
     statements.push(selectStatement);
