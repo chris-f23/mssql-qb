@@ -1,16 +1,15 @@
-import { Ref, ValueRef } from "./ref";
+import { ValueRef, LiteralRef } from "./ref";
 
 export class Fn {
   /**
-   * @param  {...Ref|string} params
-   * @returns
+   * @param  {...ValueRef|string} params
    */
   static CONCAT(...params) {
-    return new Ref(
+    return new ValueRef(
       `CONCAT(${params
         .map((param) => {
           if (typeof param === "string") {
-            return new ValueRef(param).build();
+            return new LiteralRef(param).build();
           }
 
           return param.build();
@@ -21,24 +20,24 @@ export class Fn {
 
   /**
    * @param {DatePart} datePart
-   * @param {Ref} startDate
-   * @param {Ref} endDate
+   * @param {ValueRef} startDate
+   * @param {ValueRef} endDate
    */
   static DATEDIFF(datePart, startDate, endDate) {
-    return new Ref(
+    return new ValueRef(
       `DATEDIFF(${datePart}, ${startDate.build()}, ${endDate.build()})`
     );
   }
 
   static GETDATE() {
-    return new Ref("GETDATE()");
+    return new ValueRef("GETDATE()");
   }
 
   /**
-   * @param {Ref|string} str
+   * @param {ValueRef|string} str
    */
   static UPPER(str) {
-    if (typeof str === "string") return new Ref(`UPPER('${str}')`);
-    return new Ref(`UPPER(${str.build()})`);
+    if (typeof str === "string") return new ValueRef(`UPPER('${str}')`);
+    return new ValueRef(`UPPER(${str.build()})`);
   }
 }

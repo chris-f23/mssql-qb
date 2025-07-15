@@ -1,4 +1,4 @@
-import { Column, TableDefinition } from "./table-definition";
+import { TableDefinition } from "./table-definition";
 import { ColumnRef, Ref } from "./ref";
 
 /**
@@ -34,13 +34,14 @@ export class SelectBuilder {
       Object.entries(this.source).map(([alias, tableDefinition]) => {
         return [
           alias,
-          Object.fromEntries(
-            Object.entries(tableDefinition.columns).map(
+          Object.fromEntries([
+            ...Object.entries(tableDefinition.columns).map(
               ([columnKey, column]) => {
                 return [columnKey, new ColumnRef(alias, column.name)];
               }
-            )
-          ),
+            ),
+            ["*", new Ref(new ColumnRef(alias, "*").build())],
+          ]),
         ];
       })
     );

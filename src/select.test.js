@@ -2,7 +2,7 @@ import { describe, expect, it } from "@jest/globals";
 import { SelectBuilder } from "./select";
 import { Column, TableDefinition } from "./table-definition";
 import { Fn } from "./fn";
-import { ValueRef } from "./ref";
+import { LiteralRef } from "./ref";
 
 const pacienteTable = new TableDefinition({
   name: "Paciente",
@@ -70,6 +70,8 @@ describe("SelectBuilder - SELECT", () => {
         ];
       })
       .from("pac");
+
+    expect(qb.build()).toEqual(expectedQuery);
   });
 
   it("Debe seleccionar el nombre completo", () => {
@@ -116,7 +118,7 @@ describe("SelectBuilder - WHERE", () => {
       })
       .from("pac")
       .where(({ pac }) => {
-        return pac.fechaNacimiento.$isGreaterThan(new ValueRef("2000-01-01"));
+        return pac.fechaNacimiento.$isGreaterThan(new LiteralRef("2000-01-01"));
       });
 
     expect(qb.build()).toEqual(expectedQuery);

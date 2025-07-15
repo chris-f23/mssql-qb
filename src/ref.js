@@ -1,7 +1,15 @@
 import { Comparison } from "./search-condition";
 
+/**
+ * Una referencia es cualquier valor que pueda ser utilizado en una consulta.
+ * La referencia base solo tiene acceso al valor guardado.
+ * @abstract
+ */
 export class Ref {
-  /** @private @type {string} */
+  /**
+   * El valor de la referencia.
+   * @protected @type {string}
+   */
   value;
 
   /**
@@ -12,58 +20,105 @@ export class Ref {
   }
 
   /**
-   * @param {string} alias 
+   * Construye la referencia, devolviendo el valor guardado.
+   * @returns {string}
+   */
+  build() {
+    return this.value;
+  }
+}
+
+/**
+ * Una referencia que puede ser utilizada en comparaciones.
+ * Posee funciones para construir comparaciones con otras referencias comparables.
+ * Además, permite asignar un alias a la referencia.
+ */
+export class ValueRef extends Ref {
+  /**
+   * Crea una referencia comparable a partir de un valor.
+   * @param {string} value
+   */
+  constructor(value) {
+    super(value);
+  }
+
+  /**
+   * Asigna un alias a la referencia actual, generando una nueva referencia.
+   * @param {string} alias
    */
   as(alias) {
     return new Ref(`${this.value} AS ${alias}`);
   }
 
-  build() {
-    return this.value;
-  }
-
   /**
-   * @param {Ref} otherRef
+   * Crea una comparación "=" entre la referencia actual y otra.
+   * @param {ValueRef} otherRef
    */
   $isEqualTo(otherRef) {
     return new Comparison(this, "=", otherRef);
   }
 
   /**
-   * @param {Ref} otherRef
+   * Crea una comparación ">" entre la referencia actual y otra.
+   * @param {ValueRef} otherRef
    */
   $isGreaterThan(otherRef) {
     return new Comparison(this, ">", otherRef);
   }
 
   /**
-   * @param {Ref} otherRef
+   * Crea una comparación "<" entre la referencia actual y otra.
+   * @param {ValueRef} otherRef
    */
   $isLessThan(otherRef) {
     return new Comparison(this, "<", otherRef);
   }
+
+  /**
+   * Crea una comparación ">=" entre la referencia actual y otra.
+   * @param {ValueRef} otherRef
+   */
+  $isGreaterThanOrEqualTo(otherRef) {
+    return new Comparison(this, ">=", otherRef);
+  }
+
+  /**
+   * Crea una comparación "<=" entre la referencia actual y otra.
+   * @param {ValueRef} otherRef
+   */
+  $isLessThanOrEqualTo(otherRef) {
+    return new Comparison(this, "<=", otherRef);
+  }
+
+  /**
+   * Crea una comparación "<>" entre la referencia actual y otra.
+   * @param {ValueRef} otherRef
+   */
+  $isNotEqualTo(otherRef) {
+    return new Comparison(this, "<>", otherRef);
+  }
 }
 
-export class ColumnRef extends Ref {
-  tableAlias;
-  columnName;
-
+export class ColumnRef extends ValueRef {
+  /**
+   * Crea una referencia a una columna de una tabla.
+   * @param {string} tableAlias - El alias de la tabla
+   * @param {string} columnName - El nombre de la columna de la tabla
+   */
   constructor(tableAlias, columnName) {
     super(`${tableAlias}.${columnName}`);
     this.tableAlias = tableAlias;
     this.columnName = columnName;
   }
-
-  // /**
-  //  * @param {Ref} otherRef
-  //  */
-  // equals(otherRef) {
-  //   return new ComparisonRef(this, "=", otherRef);
-  // }
 }
 
-export class ValueRef extends Ref {
+/**
+ * Una referencia a un valor literal.
+ */
+export class LiteralRef extends ValueRef {
   /**
+   * Crea una referencia a un valor literal.
+   * Dependiendo del tipo de dato recibido se construye el valor adecuado para la referencia.
    * @param {string|number|boolean|null} value
    */
   constructor(value) {

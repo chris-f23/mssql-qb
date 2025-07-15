@@ -1,6 +1,6 @@
 import { describe, it, expect } from "@jest/globals";
 import { Fn } from "./fn";
-import { ValueRef } from "./ref";
+import { LiteralRef } from "./ref";
 import { Comparison, Condition } from "./search-condition";
 import { SelectBuilder } from "./select";
 import { TableDefinition, Column } from "./table-definition";
@@ -71,12 +71,12 @@ describe("SelectBuilder - SYNTAX", () => {
         const isBornAfter2000 = new Comparison(
           person.birthdate,
           ">",
-          new ValueRef("2000-01-01")
+          new LiteralRef("2000-01-01")
         );
         const isBornBefore2020 = new Comparison(
           person.birthdate,
           "<",
-          new ValueRef("2020-01-01")
+          new LiteralRef("2020-01-01")
         );
 
         return new Condition(isBornAfter2000, "AND", isBornBefore2020);
@@ -119,12 +119,12 @@ describe("SelectBuilder - SYNTAX", () => {
       const isBornAfter2000 = new Comparison(
         person.birthdate,
         ">",
-        new ValueRef("2000-01-01")
+        new LiteralRef("2000-01-01")
       );
       const isBornBefore2020 = new Comparison(
         person.birthdate,
         "<",
-        new ValueRef("2020-01-01")
+        new LiteralRef("2020-01-01")
       );
 
       return new Condition(isBornAfter2000, "AND", isBornBefore2020);
@@ -155,9 +155,9 @@ describe("SelectBuilder - SYNTAX", () => {
       .where(
         ({ person }) =>
           new Condition(
-            new Comparison(person.birthdate, ">", new ValueRef("2000-01-01")),
+            new Comparison(person.birthdate, ">", new LiteralRef("2000-01-01")),
             "AND",
-            new Comparison(person.birthdate, "<", new ValueRef("2020-01-01"))
+            new Comparison(person.birthdate, "<", new LiteralRef("2020-01-01"))
           )
       );
 
@@ -165,8 +165,8 @@ describe("SelectBuilder - SYNTAX", () => {
   });
 
   it("Debe construir la consulta esperada aprovechando encadenamiento de métodos en la construcción de condiciones", () => {
-    const year2000Ref = new ValueRef("2000-01-01");
-    const year2020Ref = new ValueRef("2020-01-01");
+    const year2000Ref = new LiteralRef("2000-01-01");
+    const year2020Ref = new LiteralRef("2020-01-01");
 
     const qb = new SelectBuilder({
       person: personTable,

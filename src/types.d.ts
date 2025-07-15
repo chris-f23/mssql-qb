@@ -2,6 +2,8 @@ type SourceTables<TSource> = {
   // [TSourceTableAlias in keyof TSource]: TSource[TSourceTableAlias]["columns"];
   [TSourceTableAlias in keyof TSource]: {
     [TColumnAlias in keyof TSource[TSourceTableAlias]["columns"]]: import("./ref").ColumnRef;
+  } & {
+    "*": import("./ref").Ref;
   };
 };
 
@@ -17,7 +19,7 @@ type JoinCallback<TSource> = (source: SourceTables<TSource>) => SeachCondition;
 
 type WhereCallback<TSource> = (source: SourceTables<TSource>) => SeachCondition;
 
-type ComparisonOperator = "=" | ">" | "<" | ">=" | "<=" | "!=";
+type ComparisonOperator = "=" | ">" | "<" | ">=" | "<=" | "<>";
 type LogicalOperator = "AND" | "OR";
 
 type DatePart =

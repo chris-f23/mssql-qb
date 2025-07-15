@@ -11,7 +11,7 @@ export class TableDefinition {
   /** @type {string} */
   database;
 
-  /** @type {TColumns & { "*": Column }} */
+  /** @type {TColumns} */
   columns;
 
   /**
@@ -25,10 +25,7 @@ export class TableDefinition {
     this.database = database;
     this.schema = schema;
     this.name = name;
-    this.columns = {
-      ...columns,
-      "*": new Column("*"),
-    };
+    this.columns = columns;
   }
 
   build() {
