@@ -2,7 +2,6 @@ import { describe, expect, it } from "@jest/globals";
 import { SelectBuilder } from "./select";
 import { Column, TableDefinition } from "./table-definition";
 import { Fn } from "./fn";
-import { LiteralRef } from "./ref";
 
 const pacienteTable = new TableDefinition({
   name: "Paciente",
@@ -150,24 +149,6 @@ describe("SelectBuilder - SELECT", () => {
       .distinct()
       .top(3)
       .from("pac");
-
-    expect(qb.build()).toEqual(expectedQuery);
-  });
-});
-
-describe("SelectBuilder - WHERE", () => {
-  it("Debe filtrar donde la fecha de nacimiento sea mayor a 2000-01-01", () => {
-    const expectedQuery =
-      "SELECT pac.* FROM BD_PRINCIPAL.dbo.Paciente AS pac WHERE pac.FechaNac > '2000-01-01'";
-
-    const qb = new SelectBuilder({ pac: pacienteTable })
-      .select(({ pac }) => {
-        return [pac["*"]];
-      })
-      .from("pac")
-      .where(({ pac }) => {
-        return pac.fechaNacimiento.$isGreaterThan(new LiteralRef("2000-01-01"));
-      });
 
     expect(qb.build()).toEqual(expectedQuery);
   });

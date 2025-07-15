@@ -2,16 +2,16 @@
  * @template {Record<string, Column>} TColumns
  */
 export class TableDefinition {
-  /** @type {string} */
+  /** @readonly @type {string} */
   name;
 
-  /** @type {string} */
+  /** @readonly @type {string} */
   schema;
 
-  /** @type {string} */
+  /** @readonly @type {string} */
   database;
 
-  /** @type {TColumns} */
+  /** @readonly @type {TColumns} */
   columns;
 
   /**
@@ -28,8 +28,27 @@ export class TableDefinition {
     this.columns = columns;
   }
 
-  build() {
-    return `${this.database}.${this.schema}.${this.name}`;
+  /**
+   * @param {object} params
+   * @param {boolean} params.useDatabaseName
+   * @param {boolean} params.useSchemaName
+   */
+  build({ useDatabaseName, useSchemaName }) {
+    let built = "";
+
+    if (useDatabaseName === true) {
+      built += `${this.database}.`;
+    }
+
+    if (useSchemaName === true) {
+      built += `${this.schema}.`;
+    } else if (useDatabaseName === true && useSchemaName === false) {
+      built += ".";
+    }
+
+    built += this.name;
+
+    return built;
   }
 }
 

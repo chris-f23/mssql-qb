@@ -97,18 +97,33 @@ export class ValueRef extends Ref {
   $isNotEqualTo(otherRef) {
     return new Comparison(this, "<>", otherRef);
   }
+
+  /**
+   * Crea una comparación LIKE entre la referencia actual y un patrón.
+   * @param {string} pattern
+   * @param {string} escapeChar
+   */
+  $isLike(pattern, escapeChar) {
+    return new Comparison(
+      this,
+      "LIKE",
+      new Ref(`'${pattern}' ESCAPE '${escapeChar}'`)
+    );
+  }
 }
 
 export class ColumnRef extends ValueRef {
   /**
    * Crea una referencia a una columna de una tabla.
-   * @param {string} tableAlias - El alias de la tabla
+   * @param {string|null} tableAlias - El alias de la tabla
    * @param {string} columnName - El nombre de la columna de la tabla
    */
   constructor(tableAlias, columnName) {
-    super(`${tableAlias}.${columnName}`);
-    this.tableAlias = tableAlias;
-    this.columnName = columnName;
+    if (tableAlias) {
+      super(`${tableAlias}.${columnName}`);
+    } else {
+      super(columnName);
+    }
   }
 }
 

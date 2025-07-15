@@ -6,7 +6,11 @@ type SourceTables<TSource> = {
     "*": import("./ref").Ref;
   };
 };
-
+type SelectBuilderOptions = {
+  useDatabaseName?: boolean;
+  useSchemaName?: boolean;
+  useTableAlias?: boolean;
+} 
 type SelectTopMode = "PERCENT" | "WITH TIES"
 
 type SeachCondition =
@@ -21,7 +25,7 @@ type JoinCallback<TSource> = (source: SourceTables<TSource>) => SeachCondition;
 
 type WhereCallback<TSource> = (source: SourceTables<TSource>) => SeachCondition;
 
-type ComparisonOperator = "=" | ">" | "<" | ">=" | "<=" | "<>";
+type ComparisonOperator = "=" | ">" | "<" | ">=" | "<=" | "<>" | "LIKE";
 type LogicalOperator = "AND" | "OR";
 
 type DatePart =

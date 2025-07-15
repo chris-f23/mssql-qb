@@ -5,6 +5,9 @@ import { ColumnRef, Ref } from "./ref";
  * @template {Record<string, TableDefinition>} Source
  */
 export class SelectBuilder {
+  /** @type {SelectBuilderOptions} */
+  #options;
+
   /** @type {null | Array<Ref>} */
   #selection = null;
 
@@ -31,8 +34,17 @@ export class SelectBuilder {
 
   /**
    * @param {Source} source
+   * @param {SelectBuilderOptions} options
    */
-  constructor(source) {
+  constructor(source, options = {}) {
+    this.#options = {
+      useDatabaseName: true,
+      useSchemaName: true,
+      useTableAlias: true,
+
+      ...options,
+    };
+
     this.source = source;
 
     // @ts-ignore
@@ -43,10 +55,24 @@ export class SelectBuilder {
           Object.fromEntries([
             ...Object.entries(tableDefinition.columns).map(
               ([columnKey, column]) => {
-                return [columnKey, new ColumnRef(alias, column.name)];
+                return [
+                  columnKey,
+                  new ColumnRef(
+                    this.#options.useTableAlias ? alias : null,
+                    column.name
+                  ),
+                ];
               }
             ),
-            ["*", new Ref(new ColumnRef(alias, "*").build())],
+            [
+              "*",
+              new Ref(
+                new ColumnRef(
+                  this.#options.useTableAlias ? alias : null,
+                  "*"
+                ).build()
+              ),
+            ],
           ]),
         ];
       })
@@ -170,8 +196,16 @@ export class SelectBuilder {
     if (this.#mainTable) {
       const mainTable = this.source[this.#mainTable];
 
-      const fromStatement = `FROM ${mainTable.build()} AS ${this.#mainTable.toString()}`;
-      statements.push(fromStatement);
+      let builtTable = mainTable.build({
+        useDatabaseName: this.#options.useDatabaseName ?? true,
+        useSchemaName: this.#options.useSchemaName ?? true,
+      });
+
+      if (this.#options.useTableAlias === true) {
+        builtTable += ` AS ${this.#mainTable.toString()}`;
+      }
+
+      statements.push(`FROM ${builtTable}`);
     }
 
     if (this.#joins) {
@@ -179,7 +213,16 @@ export class SelectBuilder {
         .map((join) => {
           const secondaryTable = this.source[join.secondaryTable];
 
-          return `JOIN ${secondaryTable.build()} AS ${join.secondaryTable.toString()} ON ${join.searchCondition.build()}`;
+          let builtTable = secondaryTable.build({
+            useDatabaseName: this.#options.useDatabaseName ?? true,
+            useSchemaName: this.#options.useSchemaName ?? true,
+          });
+
+          if (this.#options.useTableAlias === true) {
+            builtTable += ` AS ${join.secondaryTable.toString()}`;
+          }
+
+          return `JOIN ${builtTable} ON ${join.searchCondition.build()}`;
         })
         .join(" ");
       statements.push(joinStatements);
