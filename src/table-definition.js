@@ -29,9 +29,7 @@ export class TableDefinition {
   }
 
   /**
-   * @param {object} params
-   * @param {boolean} params.useDatabaseName
-   * @param {boolean} params.useSchemaName
+   * @param {BuildTableOptions} options
    */
   build({ useDatabaseName, useSchemaName }) {
     let built = "";

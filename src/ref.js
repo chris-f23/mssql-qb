@@ -135,14 +135,16 @@ export class LiteralRef extends ValueRef {
    * Crea una referencia a un valor literal.
    * Dependiendo del tipo de dato recibido se construye el valor adecuado para la referencia.
    * @param {string|number|boolean|null} value
+   * @param {boolean} isUnicodeString
    */
-  constructor(value) {
+  constructor(value, isUnicodeString = false) {
     let convertedValue;
 
     if (value === null) {
       convertedValue = "NULL";
     } else if (typeof value === "string") {
-      convertedValue = `'${value}'`;
+      if (isUnicodeString === true) convertedValue = `N'${value}'`;
+      else convertedValue = `'${value}'`;
     } else if (typeof value === "number") {
       convertedValue = value.toString();
     } else if (typeof value === "boolean") {

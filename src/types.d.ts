@@ -18,12 +18,36 @@ type SourceTables<TSource> = {
   //   column: TTableColumn
   // ): import("./ref").ColumnRef;
 };
-type SelectBuilderOptions = {
-  useDatabaseName?: boolean;
-  useSchemaName?: boolean;
-  useTableAlias?: boolean;
+
+type RowToInsert<TargetTable extends TableDefinition> = Record<
+  TargetTable["columns"][number],
+  LiteralRef
+>;
+
+type RowToInsertPartialOrRequired<
+  TRow extends RowToInsert,
+  TOmitColumnListOption extends boolean
+> = TOmitColumnListOption extends true ? TRow : Partial<TRow>;
+
+type BuilderOptions = {
+  useDatabaseName: boolean;
+  useSchemaName: boolean;
 };
-type SelectTopMode = "PERCENT" | "WITH TIES";
+
+type SelectBuilderOptions = BuilderOptions & {
+  useTableAlias: boolean;
+};
+
+type InsertBuilderOptions = BuilderOptions & {
+  omitColumnList: boolean;
+};
+
+type BuildTableOptions = {
+  useDatabaseName: boolean;
+  useSchemaName: boolean;
+};
+
+type SelectTopMode = "PERCENT"; // "WITH TIES"
 
 type SeachCondition =
   | import("./search-condition").Comparison

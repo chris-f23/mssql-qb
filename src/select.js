@@ -34,7 +34,7 @@ export class SelectBuilder {
 
   /**
    * @param {Source} source
-   * @param {SelectBuilderOptions} options
+   * @param {Partial<SelectBuilderOptions>} [options]
    */
   constructor(source, options = {}) {
     this.#options = {
