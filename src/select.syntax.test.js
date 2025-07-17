@@ -3,30 +3,20 @@ import { Fn } from "./fn";
 import { LiteralRef } from "./ref";
 import { Comparison, Condition } from "./search-condition";
 import { SelectBuilder } from "./select";
-import { TableDefinition, Column } from "./table-definition";
+import { TableDefinition } from "./table-definition";
 
 const personTable = new TableDefinition({
   name: "Person",
   schema: "dbo",
   database: "MAIN_DB",
-  columns: {
-    id: new Column("Id"),
-    name: new Column("Name"),
-    lastname: new Column("Lastname"),
-    birthdate: new Column("DateOfBirth"),
-  },
+  columns: ["Id", "Name", "Lastname", "DateOfBirth"],
 });
 
 const addressTable = new TableDefinition({
   name: "Address",
   schema: "dbo",
   database: "MAIN_DB",
-  columns: {
-    id: new Column("Id"),
-    personId: new Column("PersonId"),
-    line: new Column("Line"),
-    city: new Column("City"),
-  },
+  columns: ["Id", "PersonId", "Line", "City"],
 });
 
 const expectedQuery =
@@ -45,36 +35,42 @@ describe("SelectBuilder - SYNTAX", () => {
       address: addressTable,
     })
       .select(({ person, address }) => {
-        const personId = person.id.as("personId");
+        const personId = person.get("Id").as("personId");
         const personFullname = Fn.UPPER(
-          Fn.CONCAT(person.name, " ", person.lastname)
+          Fn.CONCAT(person.get("Name"), " ", person.get("Lastname"))
         ).as("personFullname");
 
         const personAge = Fn.DATEDIFF(
           "year",
-          person.birthdate,
+          person.get("DateOfBirth"),
           Fn.GETDATE()
         ).as("personAge");
 
-        const fullAddress = Fn.CONCAT(address.line, ", ", address.city).as(
-          "fullAddress"
-        );
+        const fullAddress = Fn.CONCAT(
+          address.get("Line"),
+          ", ",
+          address.get("City")
+        ).as("fullAddress");
 
         return [personId, personFullname, personAge, fullAddress];
       })
       .from("person")
       .join("address", ({ person, address }) => {
-        const isSamePerson = new Comparison(person.id, "=", address.personId);
+        const isSamePerson = new Comparison(
+          person.get("Id"),
+          "=",
+          address.get("PersonId")
+        );
         return isSamePerson;
       })
       .where(({ person }) => {
         const isBornAfter2000 = new Comparison(
-          person.birthdate,
+          person.get("DateOfBirth"),
           ">",
           new LiteralRef("2000-01-01")
         );
         const isBornBefore2020 = new Comparison(
-          person.birthdate,
+          person.get("DateOfBirth"),
           "<",
           new LiteralRef("2020-01-01")
         );
@@ -92,18 +88,22 @@ describe("SelectBuilder - SYNTAX", () => {
     });
 
     qb.select(({ person, address }) => {
-      const personId = person.id.as("personId");
+      const personId = person.get("Id").as("personId");
       const personFullname = Fn.UPPER(
-        Fn.CONCAT(person.name, " ", person.lastname)
+        Fn.CONCAT(person.get("Name"), " ", person.get("Lastname"))
       ).as("personFullname");
 
-      const personAge = Fn.DATEDIFF("year", person.birthdate, Fn.GETDATE()).as(
-        "personAge"
-      );
+      const personAge = Fn.DATEDIFF(
+        "year",
+        person.get("DateOfBirth"),
+        Fn.GETDATE()
+      ).as("personAge");
 
-      const fullAddress = Fn.CONCAT(address.line, ", ", address.city).as(
-        "fullAddress"
-      );
+      const fullAddress = Fn.CONCAT(
+        address.get("Line"),
+        ", ",
+        address.get("City")
+      ).as("fullAddress");
 
       return [personId, personFullname, personAge, fullAddress];
     });
@@ -111,18 +111,22 @@ describe("SelectBuilder - SYNTAX", () => {
     qb.from("person");
 
     qb.join("address", ({ person, address }) => {
-      const isSamePerson = new Comparison(person.id, "=", address.personId);
+      const isSamePerson = new Comparison(
+        person.get("Id"),
+        "=",
+        address.get("PersonId")
+      );
       return isSamePerson;
     });
 
     qb.where(({ person }) => {
       const isBornAfter2000 = new Comparison(
-        person.birthdate,
+        person.get("DateOfBirth"),
         ">",
         new LiteralRef("2000-01-01")
       );
       const isBornBefore2020 = new Comparison(
-        person.birthdate,
+        person.get("DateOfBirth"),
         "<",
         new LiteralRef("2020-01-01")
       );
@@ -139,25 +143,37 @@ describe("SelectBuilder - SYNTAX", () => {
       address: addressTable,
     })
       .select(({ person, address }) => [
-        person.id.as("personId"),
-        Fn.UPPER(Fn.CONCAT(person.name, " ", person.lastname)).as(
+        person.get("Id").as("personId"),
+        Fn.UPPER(Fn.CONCAT(person.get("Name"), " ", person.get("Lastname"))).as(
           "personFullname"
         ),
-        Fn.DATEDIFF("year", person.birthdate, Fn.GETDATE()).as("personAge"),
-        Fn.CONCAT(address.line, ", ", address.city).as("fullAddress"),
+        Fn.DATEDIFF("year", person.get("DateOfBirth"), Fn.GETDATE()).as(
+          "personAge"
+        ),
+        Fn.CONCAT(address.get("Line"), ", ", address.get("City")).as(
+          "fullAddress"
+        ),
       ])
       .from("person")
       .join(
         "address",
         ({ person, address }) =>
-          new Comparison(person.id, "=", address.personId)
+          new Comparison(person.get("Id"), "=", address.get("PersonId"))
       )
       .where(
         ({ person }) =>
           new Condition(
-            new Comparison(person.birthdate, ">", new LiteralRef("2000-01-01")),
+            new Comparison(
+              person.get("DateOfBirth"),
+              ">",
+              new LiteralRef("2000-01-01")
+            ),
             "AND",
-            new Comparison(person.birthdate, "<", new LiteralRef("2020-01-01"))
+            new Comparison(
+              person.get("DateOfBirth"),
+              "<",
+              new LiteralRef("2020-01-01")
+            )
           )
       );
 
@@ -173,21 +189,26 @@ describe("SelectBuilder - SYNTAX", () => {
       address: addressTable,
     })
       .select(({ person, address }) => [
-        person.id.as("personId"),
-        Fn.UPPER(Fn.CONCAT(person.name, " ", person.lastname)).as(
+        person.get("Id").as("personId"),
+        Fn.UPPER(Fn.CONCAT(person.get("Name"), " ", person.get("Lastname"))).as(
           "personFullname"
         ),
-        Fn.DATEDIFF("year", person.birthdate, Fn.GETDATE()).as("personAge"),
-        Fn.CONCAT(address.line, ", ", address.city).as("fullAddress"),
+        Fn.DATEDIFF("year", person.get("DateOfBirth"), Fn.GETDATE()).as(
+          "personAge"
+        ),
+        Fn.CONCAT(address.get("Line"), ", ", address.get("City")).as(
+          "fullAddress"
+        ),
       ])
       .from("person")
       .join("address", ({ person, address }) =>
-        person.id.$isEqualTo(address.personId)
+        person.get("Id").$isEqualTo(address.get("PersonId"))
       )
       .where(({ person }) =>
-        person.birthdate
+        person
+          .get("DateOfBirth")
           .$isGreaterThan(year2000Ref)
-          .$and(person.birthdate.$isLessThan(year2020Ref))
+          .$and(person.get("DateOfBirth").$isLessThan(year2020Ref))
       );
 
     expect(qb.build()).toEqual(expectedQuery);

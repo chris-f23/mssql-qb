@@ -45,35 +45,32 @@ export class SelectBuilder {
       ...options,
     };
 
+    const _options = this.#options;
+
     this.source = source;
 
     // @ts-ignore
     this.sourceTables = Object.fromEntries(
-      Object.entries(this.source).map(([alias, tableDefinition]) => {
+      Object.entries(this.source).map(([alias]) => {
         return [
           alias,
-          Object.fromEntries([
-            ...Object.entries(tableDefinition.columns).map(
-              ([columnKey, column]) => {
-                return [
-                  columnKey,
+          {
+            get(column) {
+              if (column === "*") {
+                return new Ref(
                   new ColumnRef(
-                    this.#options.useTableAlias ? alias : null,
-                    column.name
-                  ),
-                ];
+                    _options.useTableAlias ? alias : null,
+                    "*"
+                  ).build()
+                );
               }
-            ),
-            [
-              "*",
-              new Ref(
-                new ColumnRef(
-                  this.#options.useTableAlias ? alias : null,
-                  "*"
-                ).build()
-              ),
-            ],
-          ]),
+
+              return new ColumnRef(
+                _options.useTableAlias ? alias : null,
+                column
+              );
+            },
+          },
         ];
       })
     );

@@ -1,19 +1,19 @@
 import { describe, expect, it } from "@jest/globals";
 import { SelectBuilder } from "./select";
-import { Column, TableDefinition } from "./table-definition";
+import { TableDefinition } from "./table-definition";
 import { Fn } from "./fn";
 
 const pacienteTable = new TableDefinition({
   name: "Paciente",
   database: "BD_PRINCIPAL",
   schema: "dbo",
-  columns: {
-    id: new Column("Identificador"),
-    nombre: new Column("Nombre"),
-    apellidoPaterno: new Column("ApellidoPat"),
-    apellidoMaterno: new Column("ApellidoMat"),
-    fechaNacimiento: new Column("FechaNac"),
-  },
+  columns: [
+    "Identificador",
+    "Nombre",
+    "ApellidoPat",
+    "ApellidoMat",
+    "FechaNac",
+  ],
 });
 
 describe("SelectBuilder - SELECT", () => {
@@ -23,7 +23,7 @@ describe("SelectBuilder - SELECT", () => {
 
     const qb = new SelectBuilder({ pac: pacienteTable })
       .select(({ pac }) => {
-        return [pac.id, pac.nombre];
+        return [pac.get("Identificador"), pac.get("Nombre")];
       })
       .from("pac");
 
@@ -37,11 +37,11 @@ describe("SelectBuilder - SELECT", () => {
     const qb = new SelectBuilder({ pac: pacienteTable })
       .select(({ pac }) => {
         return [
-          pac.id,
-          pac.nombre,
-          pac.apellidoPaterno,
-          pac.apellidoMaterno,
-          pac.fechaNacimiento,
+          pac.get("Identificador"),
+          pac.get("Nombre"),
+          pac.get("ApellidoPat"),
+          pac.get("ApellidoMat"),
+          pac.get("FechaNac"),
         ];
       })
       .from("pac");
@@ -61,11 +61,11 @@ describe("SelectBuilder - SELECT", () => {
     const qb = new SelectBuilder({ pac: pacienteTable })
       .select(({ pac }) => {
         return [
-          pac.id.as("Id"),
-          pac.nombre.as("Nombre"),
-          pac.apellidoPaterno.as("ApellidoPaterno"),
-          pac.apellidoMaterno.as("ApellidoMaterno"),
-          pac.fechaNacimiento.as("FechaNacimiento"),
+          pac.get("Identificador").as("Id"),
+          pac.get("Nombre").as("Nombre"),
+          pac.get("ApellidoPat").as("ApellidoPaterno"),
+          pac.get("ApellidoMat").as("ApellidoMaterno"),
+          pac.get("FechaNac").as("FechaNacimiento"),
         ];
       })
       .from("pac");
@@ -82,11 +82,11 @@ describe("SelectBuilder - SELECT", () => {
       .select(({ pac }) => {
         return [
           Fn.CONCAT(
-            pac.nombre,
+            pac.get("Nombre"),
             " ",
-            pac.apellidoPaterno,
+            pac.get("ApellidoPat"),
             " ",
-            pac.apellidoMaterno
+            pac.get("ApellidoMat")
           ).as("NombreCompleto"),
         ];
       })
@@ -99,7 +99,7 @@ describe("SelectBuilder - SELECT", () => {
     const expectedQuery = "SELECT pac.* FROM BD_PRINCIPAL.dbo.Paciente AS pac";
 
     const qb = new SelectBuilder({ pac: pacienteTable })
-      .select(({ pac }) => [pac["*"]])
+      .select(({ pac }) => [pac.get("*")])
       .from("pac");
 
     expect(qb.build()).toEqual(expectedQuery);
@@ -109,7 +109,7 @@ describe("SelectBuilder - SELECT", () => {
     const expectedQuery =
       "SELECT TOP (10) pac.Identificador FROM BD_PRINCIPAL.dbo.Paciente AS pac";
     const qb = new SelectBuilder({ pac: pacienteTable })
-      .select(({ pac }) => [pac.id])
+      .select(({ pac }) => [pac.get("Identificador")])
       .top(10)
       .from("pac");
 
@@ -121,7 +121,7 @@ describe("SelectBuilder - SELECT", () => {
       "SELECT TOP (50) PERCENT pac.Identificador " +
       "FROM BD_PRINCIPAL.dbo.Paciente AS pac";
     const qb = new SelectBuilder({ pac: pacienteTable })
-      .select(({ pac }) => [pac.id])
+      .select(({ pac }) => [pac.get("Identificador")])
       .top(50, "PERCENT")
       .from("pac");
 
@@ -133,7 +133,7 @@ describe("SelectBuilder - SELECT", () => {
       "SELECT DISTINCT pac.Nombre FROM BD_PRINCIPAL.dbo.Paciente AS pac";
 
     const qb = new SelectBuilder({ pac: pacienteTable })
-      .select(({ pac }) => [pac.nombre])
+      .select(({ pac }) => [pac.get("Nombre")])
       .distinct()
       .from("pac");
 
@@ -145,7 +145,7 @@ describe("SelectBuilder - SELECT", () => {
       "SELECT DISTINCT TOP (3) pac.Nombre FROM BD_PRINCIPAL.dbo.Paciente AS pac";
 
     const qb = new SelectBuilder({ pac: pacienteTable })
-      .select(({ pac }) => [pac.nombre])
+      .select(({ pac }) => [pac.get("Nombre")])
       .distinct()
       .top(3)
       .from("pac");

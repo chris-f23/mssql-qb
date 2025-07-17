@@ -1,17 +1,29 @@
 type SourceTables<TSource> = {
   // [TSourceTableAlias in keyof TSource]: TSource[TSourceTableAlias]["columns"];
   [TSourceTableAlias in keyof TSource]: {
-    [TColumnAlias in keyof TSource[TSourceTableAlias]["columns"]]: import("./ref").ColumnRef;
-  } & {
-    "*": import("./ref").Ref;
+    get<
+      TColumnName extends "*" | TSource[TSourceTableAlias]["columns"][number]
+    >(
+      column: TColumnName
+    ): TColumnName extends "*"
+      ? import("./ref").Ref
+      : import("./ref").ColumnRef;
   };
+
+  // get<
+  //   TTableName extends keyof TSource,
+  //   TTableColumn extends TSource[TTableName]["columns"][number]
+  // >(
+  //   table: TTableName,
+  //   column: TTableColumn
+  // ): import("./ref").ColumnRef;
 };
 type SelectBuilderOptions = {
   useDatabaseName?: boolean;
   useSchemaName?: boolean;
   useTableAlias?: boolean;
-} 
-type SelectTopMode = "PERCENT" | "WITH TIES"
+};
+type SelectTopMode = "PERCENT" | "WITH TIES";
 
 type SeachCondition =
   | import("./search-condition").Comparison

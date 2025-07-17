@@ -1,5 +1,5 @@
 /**
- * @template {Record<string, Column>} TColumns
+ * @template {string} TColumnName
  */
 export class TableDefinition {
   /** @readonly @type {string} */
@@ -11,7 +11,7 @@ export class TableDefinition {
   /** @readonly @type {string} */
   database;
 
-  /** @readonly @type {TColumns} */
+  /** @readonly @type {TColumnName[]} */
   columns;
 
   /**
@@ -19,7 +19,7 @@ export class TableDefinition {
    * @param {string} params.database - El nombre de la base de datos
    * @param {string} params.schema - El nombre del esquema
    * @param {string} params.name - El nombre de la tabla
-   * @param {TColumns} params.columns - Las columnas de la tabla
+   * @param {TColumnName[]} params.columns - Las columnas de la tabla
    */
   constructor({ database, schema, name, columns }) {
     this.database = database;
@@ -49,20 +49,5 @@ export class TableDefinition {
     built += this.name;
 
     return built;
-  }
-}
-
-export class Column {
-  /** @type {string} */
-  name;
-
-  // /** @type {ColumnType} */
-  // type;
-
-  /**
-   * @param {string} name
-   */
-  constructor(name) {
-    this.name = name;
   }
 }
