@@ -1,12 +1,19 @@
+import { LiteralRef } from "./ref";
 import { TableDefinition } from "./table-definition";
 
 /**
  * @template {TableDefinition} Target
- * @template {RowToInsert<Target>} TRow
+ * @template {Target["columns"][number]} TargetColumn
  */
 export class InsertBuilder {
   /**
-   * @type {RowToInsertPartialOrRequired<TRow, this["options"]["omitColumnList"]>[]}
+   * @type {Array<TargetColumn>}
+   */
+  columns = [];
+
+  /**
+   * @private
+   * @type {Array<Record<this["target"]["columns"][number], LiteralRef>>}
    */
   rows = [];
 
@@ -25,17 +32,21 @@ export class InsertBuilder {
     this.options = {
       useDatabaseName: true,
       useSchemaName: true,
-      omitColumnList: false,
-
       ...options,
     };
   }
 
   /**
-   * @param {RowToInsertPartialOrRequired<TRow, this["options"]["omitColumnList"]>[]} rows
+   * @template {Array<TargetColumn>} TColumnList
+   * @param {object} params
+   * @param {TColumnList} [params.columns]
+   * @param {Array<Record<TColumnList extends undefined ? this["target"]["columns"][number] : TColumnList[number], LiteralRef>>} params.rows
    */
-  insertValues(rows) {
-    this.rows = rows;
+  insert(params) {
+    this.rows = params.rows;
+    if (params.columns) {
+      this.columns = params.columns;
+    }
     return this;
   }
 
@@ -48,20 +59,27 @@ export class InsertBuilder {
 
     statements.push(`INSERT INTO ${this.target.build(this.options)} `);
 
-    if (this.options.omitColumnList === false) {
-      const columnNames = Object.keys(this.rows[0]).join(", ");
-      statements.push(`(${columnNames}) `);
+    if (this.columns.length > 0) {
+      statements.push(`(${this.columns.join(", ")}) `);
     }
 
     statements.push("VALUES ");
 
+    /** @type {Array<TargetColumn>} */
+    const actualColumnList =
+      this.columns.length > 0 ? this.columns : this.target.columns;
+
     const rowStatements = [];
     for (const row of this.rows) {
-      const rowValues = Object.values(row)
-        .map((r) => r.build())
-        .join(", ");
-
-      rowStatements.push(`(${rowValues})`);
+      const rowValues = [];
+      for (const columnName of actualColumnList) {
+        const value = row[columnName];
+        if (value === undefined) {
+          continue;
+        }
+        rowValues.push(value.build());
+      }
+      rowStatements.push(`(${rowValues.join(", ")})`);
     }
     statements.push(rowStatements.join(", "));
 

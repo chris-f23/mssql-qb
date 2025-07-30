@@ -38,9 +38,7 @@ type SelectBuilderOptions = BuilderOptions & {
   useTableAlias: boolean;
 };
 
-type InsertBuilderOptions = BuilderOptions & {
-  omitColumnList: boolean;
-};
+type InsertBuilderOptions = BuilderOptions & {};
 
 type BuildTableOptions = {
   useDatabaseName: boolean;
@@ -78,3 +76,5 @@ type DatePart =
   | "millisecond"
   | "microsecond"
   | "nanosecond";
+
+type TValue = number | string | boolean | Date | null;
