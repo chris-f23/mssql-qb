@@ -42,15 +42,15 @@ Este proyecto busca facilitar la construcción de consultas para la base de dato
 
 - [x] Debe poder indicar la tabla objetivo
   - Ej. `INSERT INTO table1`
-- [ ] Debe poder indicar las columnas a insertar
+- [x] Debe poder indicar las columnas a insertar
   - Ej. `INSERT INTO table1 (a, b, c)`
-- [ ] Debe poder indicar el registro a insertar
+- [x] Debe poder indicar el registro a insertar
   - Ej. `INSERT INTO table1 (a, b, c) VALUES (1, 'John', 'Doe')`
-- [ ] Debe permitir insertar registros sin especificar las columnas
+- [x] Debe permitir insertar registros sin especificar las columnas
   - Ej. `INSERT INTO table1 VALUES (1, 'John', 'Doe')`
-- [ ] Debe permitir insertar registros indicando columnas en cualquier orden
+- [x] Debe permitir insertar registros indicando columnas en cualquier orden
   - Ej. `INSERT INTO table1 (c, a, b) VALUES ('Doe', 1, 'John')`
-- [ ] Debe permitir insertar multiples registros
+- [x] Debe permitir insertar multiples registros
   - Ej. `INSERT INTO table1 VALUES (1, 'John', 'Doe'), (2, 'Jane', 'Doe')`
 
 ### ✏️ UPDATE

@@ -39,6 +39,7 @@ type SelectBuilderOptions = BuilderOptions & {
 };
 
 type InsertBuilderOptions = BuilderOptions & {};
+type UpdateBuilderOptions = BuilderOptions & {};
 
 type BuildTableOptions = {
   useDatabaseName: boolean;
@@ -77,4 +78,17 @@ type DatePart =
   | "microsecond"
   | "nanosecond";
 
-type TValue = number | string | boolean | Date | null;
+type TValue = number | string | boolean | null | import("./ref").ValueRef;
+
+type TUpdateSource<
+  TTarget extends import("./table-definition").TableDefinition
+> = {
+  get(column: TTarget["columns"][number]): import("./ref").ColumnRef;
+  set(column: TTarget["columns"][number], value: TValue): void;
+};
+
+// type UpdateCallback<TSource> = (
+//   current: TUpdateSource<TSource>
+// ) => Partial<Record<TSource["columns"][number], import("./ref").Ref>>;
+
+type UpdateCallback<TSource> = (current: TUpdateSource<TSource>) => void;
