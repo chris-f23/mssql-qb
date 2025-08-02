@@ -1,4 +1,4 @@
-import { LiteralRef } from "./ref";
+import { LiteralRef, Ref } from "./ref";
 import { TableDefinition } from "./table-definition";
 
 /**
@@ -13,7 +13,7 @@ export class InsertBuilder {
 
   /**
    * @private
-   * @type {Array<Record<this["target"]["columns"][number], LiteralRef>>}
+   * @type {Array<Record<this["target"]["columns"][number], TValue>>}
    */
   rows = [];
 
@@ -40,7 +40,7 @@ export class InsertBuilder {
    * @template {Array<TargetColumn>} TColumnList
    * @param {object} params
    * @param {TColumnList} [params.columns]
-   * @param {Array<Record<TColumnList extends undefined ? this["target"]["columns"][number] : TColumnList[number], LiteralRef>>} params.rows
+   * @param {Array<Record<TColumnList extends undefined ? this["target"]["columns"][number] : TColumnList[number], TValue>>} params.rows
    */
   insert(params) {
     this.rows = params.rows;
@@ -77,7 +77,12 @@ export class InsertBuilder {
         if (value === undefined) {
           continue;
         }
-        rowValues.push(value.build());
+
+        if (value instanceof Ref) {
+          rowValues.push(value.build());
+        } else {
+          rowValues.push(new LiteralRef(value).build());
+        }
       }
       rowStatements.push(`(${rowValues.join(", ")})`);
     }

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "@jest/globals";
 import { TableDefinition } from "./table-definition";
 import { InsertBuilder } from "./insert-builder";
-import { LiteralRef } from "./ref";
+import { N } from "./ref";
 import { Fn } from "./fn";
 
 const unitMeasureTable = new TableDefinition({
@@ -22,9 +22,9 @@ describe("InsertBuilder", () => {
     }).insert({
       rows: [
         {
-          UnitMeasureCode: new LiteralRef("FT", true),
-          Name: new LiteralRef("Feet", true),
-          ModifiedDate: new LiteralRef("20080414"),
+          UnitMeasureCode: N`FT`,
+          Name: N`Feet`,
+          ModifiedDate: "20080414",
         },
       ],
     });
@@ -44,19 +44,19 @@ describe("InsertBuilder", () => {
     }).insert({
       rows: [
         {
-          UnitMeasureCode: new LiteralRef("FT2", true),
-          Name: new LiteralRef("Square Feet", true),
-          ModifiedDate: new LiteralRef("20080923"),
+          UnitMeasureCode: N`FT2`,
+          Name: N`Square Feet`,
+          ModifiedDate: "20080923",
         },
         {
-          UnitMeasureCode: new LiteralRef("Y", true),
-          Name: new LiteralRef("Yards", true),
-          ModifiedDate: new LiteralRef("20080923"),
+          UnitMeasureCode: N`Y`,
+          Name: N`Yards`,
+          ModifiedDate: "20080923",
         },
         {
-          UnitMeasureCode: new LiteralRef("Y3", true),
-          Name: new LiteralRef("Cubic Yards", true),
-          ModifiedDate: new LiteralRef("20080923"),
+          UnitMeasureCode: N`Y3`,
+          Name: N`Cubic Yards`,
+          ModifiedDate: "20080923",
         },
       ],
     });
@@ -75,8 +75,8 @@ describe("InsertBuilder", () => {
       columns: ["Name", "UnitMeasureCode", "ModifiedDate"],
       rows: [
         {
-          Name: new LiteralRef("Square Yards", true),
-          UnitMeasureCode: new LiteralRef("Y2", true),
+          Name: N`Square Yards`,
+          UnitMeasureCode: N`Y2`,
           ModifiedDate: Fn.GETDATE(),
         },
       ],
