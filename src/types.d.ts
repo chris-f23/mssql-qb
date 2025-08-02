@@ -99,10 +99,16 @@ type SingleTableColumnGetter<
   get: (column: TTarget["columns"][number]) => import("./ref").ColumnRef;
 };
 
+type AssignmentOperator = "=" | "+=" | "-=" | "*=" | "/=";
+
 type SingleTableColumnSetter<
   TTarget extends import("./table-definition").TableDefinition
 > = {
-  set: (column: TTarget["columns"][number], value: TValue) => void;
+  set: (
+    column: TTarget["columns"][number],
+    operator: AssignmentOperator,
+    value: TValue
+  ) => void;
 };
 
 type SingleTableColumnGetterAndSetter<

@@ -8,11 +8,6 @@ import { TableDefinition } from "./table-definition";
  */
 export class UpdateBuilder {
   /**
-   * @type {Array<TargetColumn>}
-   */
-  columns = [];
-
-  /**
    * @readonly
    * @type {UpdateBuilderOptions}
    */
@@ -22,12 +17,9 @@ export class UpdateBuilder {
   #top = null;
 
   /**
-   * @type {{ column: TargetColumn, value: ValueRef }[]}
+   * @type {{ column: TargetColumn, operator: AssignmentOperator, value: ValueRef }[]}
    */
   assignments = [];
-
-  /** @type {TUpdateSource<Target>} */
-  targetSource;
 
   /** @type {null | SeachCondition} */
   #searchCondition = null;
@@ -45,47 +37,64 @@ export class UpdateBuilder {
       ...options,
     };
 
-    /**
-     *
-     * @param {TargetColumn} column
-     * @param {TValue} value
-     */
-    const assignValueToColumn = (column, value) => {
-      if (!(value instanceof Ref)) {
-        this.assignments.push({
-          column,
-          value: new LiteralRef(value),
-        });
-        return;
-      }
-      this.assignments.push({ column, value });
-    };
+    // /**
+    //  *
+    //  * @param {TargetColumn} column
+    //  * @param {TValue} value
+    //  */
+    // const assignValueToColumn = (column, value) => {
+    //   if (!(value instanceof Ref)) {
+    //     this.assignments.push({
+    //       column,
+    //       value: new LiteralRef(value),
+    //     });
+    //     return;
+    //   }
+    //   this.assignments.push({ column, value });
+    // };
 
-    this.targetSource = {
-      /**
-       *
-       * @param {TargetColumn} column
-       * @returns {ColumnRef}
-       */
-      get(column) {
-        return new ColumnRef(null, column);
-      },
-      /**
-       *
-       * @param {TargetColumn} column
-       * @param {TValue} value
-       */
-      set(column, value) {
-        assignValueToColumn(column, value);
-      },
-    };
+    // this.targetSource = {
+    //   /**
+    //    *
+    //    * @param {TargetColumn} column
+    //    * @returns {ColumnRef}
+    //    */
+    //   get(column) {
+    //     return new ColumnRef(null, column);
+    //   },
+    //   /**
+    //    *
+    //    * @param {TargetColumn} column
+    //    * @param {TValue} value
+    //    */
+    //   set(column, value) {
+    //     assignValueToColumn(column, value);
+    //   },
+    // };
   }
 
   /**
-   * @param {SingleTableUpdateCallback<Target>} setCallback
+   * @param {SingleTableUpdateCallback<Target>} updateCallback
    */
-  update(setCallback) {
-    setCallback(this.targetSource);
+  update(updateCallback) {
+    /** @type {Parameters<typeof updateCallback>[0]} */
+    const updateCallbackParams = {
+      set: (column, operator, value) => {
+        if (!(value instanceof Ref)) {
+          this.assignments.push({
+            column,
+            operator,
+            value: new LiteralRef(value),
+          });
+          return;
+        }
+        this.assignments.push({ column, operator, value });
+      },
+      get: (column) => {
+        return new ColumnRef(null, column);
+      },
+    };
+    updateCallback(updateCallbackParams);
     return this;
   }
 
@@ -139,7 +148,10 @@ export class UpdateBuilder {
     statements.push(
       this.assignments
         .map(
-          (assignment) => `${assignment.column} = ${assignment.value.build()}`
+          (assignment) =>
+            `${assignment.column} ${
+              assignment.operator
+            } ${assignment.value.build()}`
         )
         .join(", ")
     );

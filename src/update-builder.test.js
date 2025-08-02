@@ -19,7 +19,7 @@ describe("UpdateBuilder", () => {
     const ub = new UpdateBuilder(personAddressTable, {
       useDatabaseName: false,
     }).update((target) => {
-      target.set("ModifiedDate", Fn.GETDATE());
+      target.set("ModifiedDate", "=", Fn.GETDATE());
     });
 
     expect(ub.build()).toBe(expectedQuery);
@@ -38,10 +38,10 @@ describe("UpdateBuilder", () => {
 
     const ub = new UpdateBuilder(salesPersonTable, {
       useDatabaseName: false,
-    }).update((target) => {
-      target.set("Bonus", 6000);
-      target.set("CommissionPct", 0.1);
-      target.set("SalesQuota", null);
+    }).update((record) => {
+      record.set("Bonus", "=", 6000);
+      record.set("CommissionPct", "=", 0.1);
+      record.set("SalesQuota", "=", null);
     });
 
     expect(ub.build()).toBe(expectedQuery);
@@ -63,7 +63,7 @@ describe("UpdateBuilder", () => {
       useDatabaseName: false,
     })
       .update((record) => {
-        record.set("Color", N`Metallic Red`);
+        record.set("Color", "=", N`Metallic Red`);
       })
       .where((record) => {
         const isNamedLikeRoad250 = record.compare("Name", "LIKE", N`Road-250%`);
@@ -92,8 +92,31 @@ describe("UpdateBuilder", () => {
       .update((record) => {
         record.set(
           "VacationHours",
+          "=",
           record.get("VacationHours").$multiplyBy(1.25)
         );
+      })
+      .top(10);
+
+    expect(ub.build()).toBe(expectedQuery);
+  });
+
+  it("D1. Using the TOP clause with the multiply and assign operator", () => {
+    const expectedQuery =
+      "UPDATE TOP (10) HumanResources.Employee SET VacationHours *= 1.25";
+
+    const employeeTable = new TableDefinition({
+      name: "Employee",
+      database: "AdventureWorks2022",
+      schema: "HumanResources",
+      columns: ["VacationHours"],
+    });
+
+    const ub = new UpdateBuilder(employeeTable, {
+      useDatabaseName: false,
+    })
+      .update((record) => {
+        record.set("VacationHours", "*=", 1.25);
       })
       .top(10);
 
