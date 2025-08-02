@@ -52,10 +52,11 @@ export class ValueRef extends Ref {
 
   /**
    * Crea una comparación "=" entre la referencia actual y otra.
-   * @param {ValueRef} otherRef
+   * @param {TValue} otherValue
    */
-  $isEqualTo(otherRef) {
-    return new Comparison(this, "=", otherRef);
+  $isEqualTo(otherValue) {
+    if (otherValue instanceof Ref) return new Comparison(this, "=", otherValue);
+    return new Comparison(this, "=", new LiteralRef(otherValue));
   }
 
   /**
@@ -100,15 +101,29 @@ export class ValueRef extends Ref {
 
   /**
    * Crea una comparación LIKE entre la referencia actual y un patrón.
-   * @param {string} pattern
-   * @param {string} escapeChar
+   * @param {string | LiteralRef} pattern
+   * @param {string} [escapeChar]
    */
   $isLike(pattern, escapeChar) {
-    return new Comparison(
-      this,
-      "LIKE",
-      new Ref(`'${pattern}' ESCAPE '${escapeChar}'`)
-    );
+    const _pattern = pattern instanceof Ref ? pattern.build() : pattern;
+
+    const rightRef =
+      escapeChar !== undefined
+        ? new Ref(`'${_pattern}' ESCAPE '${escapeChar}'`)
+        : new Ref(`'${_pattern}'`);
+
+    return new Comparison(this, "LIKE", rightRef);
+  }
+
+  /**
+   * @param {TValue} otherValue
+   * @returns
+   */
+  $multiplyBy(otherValue) {
+    const otherValueRef =
+      otherValue instanceof Ref ? otherValue : new LiteralRef(otherValue);
+
+    return new ValueRef(`${this.value} * ${otherValueRef.build()}`);
   }
 }
 
@@ -155,4 +170,8 @@ export class LiteralRef extends ValueRef {
 
     super(convertedValue);
   }
+}
+
+export function N() {
+  return new LiteralRef(arguments[0][0], true);
 }

@@ -92,3 +92,37 @@ type TUpdateSource<
 // ) => Partial<Record<TSource["columns"][number], import("./ref").Ref>>;
 
 type UpdateCallback<TSource> = (current: TUpdateSource<TSource>) => void;
+
+type SingleTableColumnGetter<
+  TTarget extends import("./table-definition").TableDefinition
+> = {
+  get: (column: TTarget["columns"][number]) => import("./ref").ColumnRef;
+};
+
+type SingleTableColumnSetter<
+  TTarget extends import("./table-definition").TableDefinition
+> = {
+  set: (column: TTarget["columns"][number], value: TValue) => void;
+};
+
+type SingleTableColumnGetterAndSetter<
+  TTarget extends import("./table-definition").TableDefinition
+> = SingleTableColumnGetter<TTarget> & SingleTableColumnSetter<TTarget>;
+
+type SingleTableUpdateCallback<TTarget> = (
+  target: SingleTableColumnGetterAndSetter<TTarget>
+) => void;
+
+type SingleTableColumnComparator<
+  TTarget extends import("./table-definition").TableDefinition
+> = {
+  compare: (
+    column: TTarget["columns"][number],
+    comp: ComparisonOperator,
+    value: TValue
+  ) => import("./search-condition").Comparison;
+};
+
+type SingleTableWhereCallback<TTarget> = (
+  target: SingleTableColumnComparator<TTarget>
+) => SeachCondition;
