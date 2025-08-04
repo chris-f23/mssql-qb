@@ -14,7 +14,10 @@ export class QueryBuilder {
   /** @type {Array<Ref>} */
   selectedRefs = [];
 
-  /** @type {Array<{ ref: Ref; order: "ASC" | "DESC" }>} */
+  /** @type {boolean} */
+  distinctFlag = false;
+
+  /** @type {Array<{ ref: Ref; order?: "ASC" | "DESC" }>} */
   orderByRefs = [];
 
   /** @type {QueryBuilderOptions} */
@@ -64,6 +67,10 @@ export class QueryBuilder {
         const tableAlias = this.options.useTableAlias ? _tableAlias : null;
         this.selectedRefs.push(new ColumnRef(tableAlias, "*"));
       },
+
+      distinct: () => {
+        this.distinctFlag = true;
+      },
       from: (tableAlias) => {
         this.fromTableAlias = tableAlias;
       },
@@ -101,6 +108,11 @@ export class QueryBuilder {
     }
 
     queryParts.push("SELECT");
+
+    if (this.distinctFlag) {
+      queryParts.push("DISTINCT");
+    }
+
     queryParts.push(
       this.selectedRefs
         .map((col) => {
@@ -138,10 +150,10 @@ export class QueryBuilder {
       queryParts.push(
         this.orderByRefs
           .map(({ ref, order }) => {
-            if (ref instanceof AliasedRef) {
-              return `${ref.alias} ${order}`;
-            }
-            return `${ref.build()} ${order}`;
+            const left = ref instanceof AliasedRef ? ref.alias : ref.build();
+            const _order = order ? ` ${order}` : "";
+
+            return `${left}${_order}`;
           })
           .join(", ")
       );

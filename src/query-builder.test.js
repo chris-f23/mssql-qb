@@ -22,6 +22,13 @@ const salesOrderDetailTable = new TableDefinition({
   ],
 });
 
+const employeeTable = new TableDefinition({
+  name: "Employee",
+  database: "AdventureWorks2022",
+  schema: "HumanResources",
+  columns: ["JobTitle"],
+});
+
 describe("QueryBuilder", () => {
   it("A. Use SELECT to retrieve rows and columns", () => {
     const expectedQuery = "SELECT * FROM Production.Product ORDER BY Name ASC";
@@ -137,6 +144,31 @@ describe("QueryBuilder", () => {
 
         // ORDER BY
         helper.orderByRef(productNameRef, "DESC");
+      })
+      .build();
+
+    expect(generatedQuery).toEqual(expectedQuery);
+  });
+
+  it("C. Use DISTINCT with SELECT", () => {
+    const expectedQuery =
+      "SELECT DISTINCT JobTitle " +
+      "FROM HumanResources.Employee " +
+      "ORDER BY JobTitle";
+
+    const generatedQuery = new QueryBuilder(
+      { e: employeeTable },
+      {
+        useDatabaseName: false,
+        useSchemaName: true,
+        useTableAlias: false,
+      }
+    )
+      .select((helper) => {
+        helper.distinct();
+        helper.selectColumn("e", "JobTitle");
+        helper.from("e");
+        helper.orderByColumn("e", "JobTitle");
       })
       .build();
 

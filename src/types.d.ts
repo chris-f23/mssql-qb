@@ -161,6 +161,8 @@ type QueryBuilderSelectCallbackHelper<
     tableAlias: TTableAlias & string
   ) => void;
 
+  distinct: () => void;
+
   selectColumn: <
     TTableAlias extends keyof TSource,
     TTableColumn extends TSource[TTableAlias]["columns"][number]
@@ -182,7 +184,7 @@ type QueryBuilderSelectCallbackHelper<
   orderByColumn: <TTableAlias extends keyof TSource>(
     tableAlias: TTableAlias & string,
     tableColumn: TSource[TTableAlias]["columns"][number] & string,
-    order: "ASC" | "DESC"
+    order?: "ASC" | "DESC"
   ) => void;
 
   orderByRef: (

@@ -117,7 +117,7 @@ export class ValueRef extends Ref {
 
   /**
    * @param {TValue} otherValue
-   * @returns {ValueRef}
+   * @returns {CalculatedRef}
    */
   $multiplyBy(otherValue) {
     const otherValueRef =
@@ -129,7 +129,7 @@ export class ValueRef extends Ref {
   /**
    *
    * @param {TValue} otherValue
-   * @returns {ValueRef}
+   * @returns {CalculatedRef}
    */
   $add(otherValue) {
     const otherValueRef =
