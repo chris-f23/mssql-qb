@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@jest/globals";
 import { QueryBuilder } from "./query-builder";
 import { TableDefinition } from "./table-definition";
+import { N } from "./ref";
 
 const productTable = new TableDefinition({
   name: "Product",
@@ -27,6 +28,13 @@ const employeeTable = new TableDefinition({
   database: "AdventureWorks2022",
   schema: "HumanResources",
   columns: ["JobTitle"],
+});
+
+const tempBicyclesTable = new TableDefinition({
+  database: "tempdb",
+  schema: "dbo",
+  name: "#Bicycles",
+  columns: ["Id", "Name"],
 });
 
 describe("QueryBuilder", () => {
@@ -169,6 +177,38 @@ describe("QueryBuilder", () => {
         helper.selectColumn("e", "JobTitle");
         helper.from("e");
         helper.orderByColumn("e", "JobTitle");
+      })
+      .build();
+
+    expect(generatedQuery).toEqual(expectedQuery);
+  });
+
+  it("D. Create tables with SELECT INTO", () => {
+    const expectedQuery =
+      "SELECT * " +
+      "INTO #Bicycles " +
+      "FROM AdventureWorks2022.Production.Product " +
+      "WHERE ProductNumber LIKE 'BK%'";
+
+    const generatedQuery = new QueryBuilder(
+      { p: productTable, temp: tempBicyclesTable },
+      {
+        useDatabaseName: true,
+        useSchemaName: true,
+        useTableAlias: false,
+      }
+    )
+      .select((helper) => {
+        // Referencias
+        const productNumberLikeBK = helper
+          .getColumnRef("p", "ProductNumber")
+          .$isLike(`BK%`);
+
+        // Query
+        helper.selectAllColumns("p");
+        helper.into("temp", { useDatabaseName: false, useSchemaName: false });
+        helper.from("p");
+        helper.where(productNumberLikeBK);
       })
       .build();
 

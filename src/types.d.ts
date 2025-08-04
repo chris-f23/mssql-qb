@@ -163,6 +163,11 @@ type QueryBuilderSelectCallbackHelper<
 
   distinct: () => void;
 
+  into: <TTableAlias extends keyof TSource>(
+    tableAlias: TTableAlias & string,
+    options: Partial<QueryBuilderIntoTableOptions>
+  ) => void;
+
   selectColumn: <
     TTableAlias extends keyof TSource,
     TTableColumn extends TSource[TTableAlias]["columns"][number]
@@ -180,6 +185,8 @@ type QueryBuilderSelectCallbackHelper<
     tableAlias: TTableAlias & string,
     searchCondition: SearchCondition
   ) => void;
+
+  where: (searchCondition: SearchCondition) => void;
 
   orderByColumn: <TTableAlias extends keyof TSource>(
     tableAlias: TTableAlias & string,
@@ -201,4 +208,9 @@ type QueryBuilderOptions = {
   useDatabaseName: boolean;
   useSchemaName: boolean;
   useTableAlias: boolean;
+};
+
+type QueryBuilderIntoTableOptions = {
+  useDatabaseName: boolean;
+  useSchemaName: boolean;
 };

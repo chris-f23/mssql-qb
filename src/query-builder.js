@@ -11,6 +11,9 @@ export class QueryBuilder {
   /** @type {null | keyof TSource} */
   fromTableAlias = null;
 
+  /** @type {null | { tableAlias: keyof TSource; options: Partial<QueryBuilderIntoTableOptions> }} */
+  intoTable = null;
+
   /** @type {Array<Ref>} */
   selectedRefs = [];
 
@@ -71,8 +74,17 @@ export class QueryBuilder {
       distinct: () => {
         this.distinctFlag = true;
       },
+      into: (tableAlias, options) => {
+        this.intoTable = {
+          tableAlias,
+          options,
+        };
+      },
       from: (tableAlias) => {
         this.fromTableAlias = tableAlias;
+      },
+      where: (searchCondition) => {
+        this.searchCondition = searchCondition;
       },
       innerJoin: (tableAlias, searchCondition) => {
         this.joinedTables.push({
@@ -123,6 +135,16 @@ export class QueryBuilder {
         .join(", ")
     );
 
+    if (this.intoTable) {
+      queryParts.push("INTO");
+
+      const intoTableFullName = this.source[this.intoTable.tableAlias].build(
+        this.intoTable.options
+      );
+
+      queryParts.push(intoTableFullName);
+    }
+
     queryParts.push("FROM");
     const mainTable =
       this.source[this.fromTableAlias].build(this.options) +
@@ -143,6 +165,11 @@ export class QueryBuilder {
           })
           .join(" ")
       );
+    }
+
+    if (this.searchCondition) {
+      queryParts.push("WHERE");
+      queryParts.push(this.searchCondition.build());
     }
 
     if (this.orderByRefs.length > 0) {

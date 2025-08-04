@@ -29,7 +29,7 @@ export class TableDefinition {
   }
 
   /**
-   * @param {BuildTableOptions} options
+   * @param {Partial<BuildTableOptions>} options
    */
   build({ useDatabaseName, useSchemaName }) {
     let built = "";

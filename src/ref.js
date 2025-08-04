@@ -208,3 +208,56 @@ export class LiteralRef extends ValueRef {
 export function N() {
   return new LiteralRef(arguments[0][0], true);
 }
+
+// export class TableRef {
+//   /** @type {string|undefined} */
+//   databaseName;
+
+//   /** @type {string|undefined} */
+//   schemaName;
+
+//   /** @type {string} */
+//   tableName;
+
+//   /**
+//    * @param {object} params
+//    * @param {string} [params.databaseName]
+//    * @param {string} [params.schemaName]
+//    * @param {string} params.tableName
+//    */
+//   constructor({ databaseName, schemaName, tableName }) {
+//     this.databaseName = databaseName;
+//     this.schemaName = schemaName;
+//     this.tableName = tableName;
+//   }
+
+//   /**
+//    * @param {object} options
+//    * @param {boolean} [options.useDatabaseName]
+//    * @param {boolean} [options.useSchemaName]
+//    * @returns {string}
+//    */
+//   build(options) {
+//     let fullName = "";
+
+//     if (options.useDatabaseName && this.databaseName) {
+//       fullName += `${this.databaseName}.`;
+//     }
+//     if (options.useSchemaName && this.schemaName) {
+//       fullName += `${this.schemaName}.`;
+//     }
+
+//     fullName += this.tableName;
+
+//     return fullName;
+//   }
+// }
+
+// export class TemporaryTableRef extends TableRef {
+//   /**
+//    * @param {ConstructorParameters<typeof TableRef>[0]} params
+//    */
+//   constructor({ databaseName, schemaName, tableName }) {
+//     super({ databaseName, schemaName, tableName });
+//   }
+// }
