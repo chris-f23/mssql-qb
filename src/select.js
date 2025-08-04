@@ -20,10 +20,10 @@ export class SelectBuilder {
   /** @type {null | keyof Source} */
   #mainTable = null;
 
-  /** @type {null | Array<{ secondaryTable: keyof Source; searchCondition: SeachCondition }>} */
+  /** @type {null | Array<{ secondaryTable: keyof Source; searchCondition: SearchCondition }>} */
   #joins = null;
 
-  /** @type {null | SeachCondition} */
+  /** @type {null | SearchCondition} */
   #searchCondition = null;
 
   /** @type {Source} */

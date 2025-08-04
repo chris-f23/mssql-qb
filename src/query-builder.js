@@ -1,4 +1,4 @@
-import { ColumnRef, Ref } from "./ref";
+import { AliasedRef, ColumnRef, Ref } from "./ref";
 import { TableDefinition } from "./table-definition";
 
 /**
@@ -19,6 +19,9 @@ export class QueryBuilder {
 
   /** @type {QueryBuilderOptions} */
   options;
+
+  /** @type {Array<{ tableAlias: keyof TSource; searchCondition: SearchCondition }>} */
+  joinedTables = [];
 
   /**
    * @param {TSource} source
@@ -44,32 +47,42 @@ export class QueryBuilder {
         const tableAlias = this.options.useTableAlias ? _tableAlias : null;
         return new ColumnRef(tableAlias, tableColumn);
       },
-      selectRef: (ref) => {
+      selectColumn: (_tableAlias, tableColumn, columnAlias) => {
+        const tableAlias = this.options.useTableAlias ? _tableAlias : null;
+        const _ref = new ColumnRef(tableAlias, tableColumn);
+
+        let ref = columnAlias ? new AliasedRef(_ref, columnAlias) : _ref;
+
+        this.selectedRefs.push(ref);
+        return ref;
+      },
+      selectCalculatedRef: (_ref, columnAlias) => {
+        const ref = columnAlias ? new AliasedRef(_ref, columnAlias) : _ref;
         this.selectedRefs.push(ref);
       },
-      selectStar: (_tableAlias) => {
+      selectAllColumns: (_tableAlias) => {
         const tableAlias = this.options.useTableAlias ? _tableAlias : null;
         this.selectedRefs.push(new ColumnRef(tableAlias, "*"));
       },
       from: (tableAlias) => {
         this.fromTableAlias = tableAlias;
       },
-      orderBy: (_tableAlias, tableColumn, order) => {
+      innerJoin: (tableAlias, searchCondition) => {
+        this.joinedTables.push({
+          tableAlias,
+          searchCondition,
+        });
+      },
+      orderByColumn: (_tableAlias, tableColumn, order) => {
         const tableAlias = this.options.useTableAlias ? _tableAlias : null;
         this.orderByRefs.push({
           ref: new ColumnRef(tableAlias, tableColumn),
           order,
         });
       },
-      selectColumn: (_tableAlias, tableColumn, columnAlias) => {
-        const tableAlias = this.options.useTableAlias ? _tableAlias : null;
-        const ref = new ColumnRef(tableAlias, tableColumn);
 
-        if (columnAlias) {
-          this.selectedRefs.push(ref.as(columnAlias));
-        } else {
-          this.selectedRefs.push(ref);
-        }
+      orderByRef: (ref, order) => {
+        this.orderByRefs.push({ ref, order });
       },
     });
 
@@ -88,7 +101,15 @@ export class QueryBuilder {
     }
 
     queryParts.push("SELECT");
-    queryParts.push(this.selectedRefs.map((ref) => ref.build()).join(", "));
+    queryParts.push(
+      this.selectedRefs
+        .map((col) => {
+          return col.build();
+          // const alias = col.alias ? ` AS ${String(col.alias)}` : "";
+          // return `${col.ref.build()}${alias}`;
+        })
+        .join(", ")
+    );
 
     queryParts.push("FROM");
     const mainTable =
@@ -97,11 +118,31 @@ export class QueryBuilder {
 
     queryParts.push(mainTable);
 
+    if (this.joinedTables.length > 0) {
+      queryParts.push("INNER JOIN");
+      queryParts.push(
+        this.joinedTables
+          .map(({ tableAlias, searchCondition }) => {
+            const table = this.source[tableAlias];
+            return (
+              `${table.build(this.options)} AS ${String(tableAlias)}` +
+              ` ON ${searchCondition.build()}`
+            );
+          })
+          .join(" ")
+      );
+    }
+
     if (this.orderByRefs.length > 0) {
       queryParts.push("ORDER BY");
       queryParts.push(
         this.orderByRefs
-          .map((ref) => `${ref.ref.build()} ${ref.order}`)
+          .map(({ ref, order }) => {
+            if (ref instanceof AliasedRef) {
+              return `${ref.alias} ${order}`;
+            }
+            return `${ref.build()} ${order}`;
+          })
           .join(", ")
       );
     }

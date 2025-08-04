@@ -6,7 +6,20 @@ const productTable = new TableDefinition({
   name: "Product",
   database: "AdventureWorks2022",
   schema: "Production",
-  columns: ["Name", "ProductNumber", "ListPrice", "Color"],
+  columns: ["ProductID", "Name", "ProductNumber", "ListPrice", "Color"],
+});
+
+const salesOrderDetailTable = new TableDefinition({
+  name: "SalesOrderDetail",
+  database: "AdventureWorks2022",
+  schema: "Sales",
+  columns: [
+    "SalesOrderID",
+    "OrderQty",
+    "ProductID",
+    "UnitPrice",
+    "UnitPriceDiscount",
+  ],
 });
 
 describe("QueryBuilder", () => {
@@ -22,9 +35,9 @@ describe("QueryBuilder", () => {
       }
     )
       .select((helper) => {
-        helper.selectStar("p");
+        helper.selectAllColumns("p");
         helper.from("p");
-        helper.orderBy("p", "Name", "ASC");
+        helper.orderByColumn("p", "Name", "ASC");
       })
       .build();
 
@@ -44,9 +57,9 @@ describe("QueryBuilder", () => {
       }
     )
       .select((helper) => {
-        helper.selectStar("p");
+        helper.selectAllColumns("p");
         helper.from("p");
-        helper.orderBy("p", "Name", "ASC");
+        helper.orderByColumn("p", "Name", "ASC");
       })
       .build();
 
@@ -70,7 +83,60 @@ describe("QueryBuilder", () => {
         helper.selectColumn("p", "ProductNumber");
         helper.selectColumn("p", "ListPrice", "Price");
         helper.from("p");
-        helper.orderBy("p", "Name", "ASC");
+        helper.orderByColumn("p", "Name", "ASC");
+      })
+      .build();
+
+    expect(generatedQuery).toEqual(expectedQuery);
+  });
+
+  it("B. Use SELECT with column headings and calculations", () => {
+    const expectedQuery =
+      "SELECT p.Name AS ProductName, " +
+      "(sod.OrderQty * sod.UnitPrice) AS NonDiscountSales, " +
+      "((sod.OrderQty * sod.UnitPrice) * sod.UnitPriceDiscount) AS Discounts " +
+      "FROM Production.Product AS p " +
+      "INNER JOIN Sales.SalesOrderDetail AS sod " +
+      "ON p.ProductID = sod.ProductID " +
+      "ORDER BY ProductName DESC";
+
+    const generatedQuery = new QueryBuilder(
+      { p: productTable, sod: salesOrderDetailTable },
+      {
+        useDatabaseName: false,
+        useSchemaName: true,
+        useTableAlias: true,
+      }
+    )
+      .select((helper) => {
+        // (REFERENCIAS)
+        const nonDiscountSalesRef = helper
+          .getColumnRef("sod", "OrderQty")
+          .$multiplyBy(helper.getColumnRef("sod", "UnitPrice"));
+
+        const discountsRef = helper
+          .getColumnRef("sod", "OrderQty")
+          .$multiplyBy(helper.getColumnRef("sod", "UnitPrice"))
+          .$multiplyBy(helper.getColumnRef("sod", "UnitPriceDiscount"));
+
+        const productNameRef = helper.selectColumn("p", "Name", "ProductName");
+
+        const isSameProductId = helper
+          .getColumnRef("p", "ProductID")
+          .$isEqualTo(helper.getColumnRef("sod", "ProductID"));
+
+        // SELECT
+        helper.selectCalculatedRef(nonDiscountSalesRef, "NonDiscountSales");
+        helper.selectCalculatedRef(discountsRef, "Discounts");
+
+        // FROM
+        helper.from("p");
+
+        // INNER JOIN
+        helper.innerJoin("sod", isSameProductId);
+
+        // ORDER BY
+        helper.orderByRef(productNameRef, "DESC");
       })
       .build();
 

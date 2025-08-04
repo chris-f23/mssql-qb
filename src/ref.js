@@ -117,24 +117,25 @@ export class ValueRef extends Ref {
 
   /**
    * @param {TValue} otherValue
-   * @returns
+   * @returns {ValueRef}
    */
   $multiplyBy(otherValue) {
     const otherValueRef =
       otherValue instanceof Ref ? otherValue : new LiteralRef(otherValue);
 
-    return new ValueRef(`${this.value} * ${otherValueRef.build()}`);
+    return new CalculatedRef(`${this.value} * ${otherValueRef.build()}`);
   }
 
   /**
    *
    * @param {TValue} otherValue
+   * @returns {ValueRef}
    */
   $add(otherValue) {
     const otherValueRef =
       otherValue instanceof Ref ? otherValue : new LiteralRef(otherValue);
 
-    return new ValueRef(`${this.value} + ${otherValueRef.build()}`);
+    return new CalculatedRef(`${this.value} + ${otherValueRef.build()}`);
   }
 }
 
@@ -150,6 +151,27 @@ export class ColumnRef extends ValueRef {
     } else {
       super(columnName);
     }
+  }
+}
+
+export class AliasedRef extends Ref {
+  /**
+   *
+   * @param {ValueRef} ref - Referencia a la que se le asigna un alias
+   * @param {string} alias - Alias de la referencia
+   */
+  constructor(ref, alias) {
+    super(`${ref.build()} AS ${alias}`);
+    this.alias = alias;
+  }
+}
+
+export class CalculatedRef extends ValueRef {
+  /**
+   * @param {string} expression
+   */
+  constructor(expression) {
+    super(`(${expression})`);
   }
 }
 
