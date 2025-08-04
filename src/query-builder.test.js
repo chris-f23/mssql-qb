@@ -30,13 +30,6 @@ const employeeTable = new TableDefinition({
   columns: ["JobTitle"],
 });
 
-const tempBicyclesTable = new TableDefinition({
-  database: "tempdb",
-  schema: "dbo",
-  name: "#Bicycles",
-  columns: ["Id", "Name"],
-});
-
 describe("QueryBuilder", () => {
   it("A. Use SELECT to retrieve rows and columns", () => {
     const expectedQuery = "SELECT * FROM Production.Product ORDER BY Name ASC";
@@ -183,12 +176,19 @@ describe("QueryBuilder", () => {
     expect(generatedQuery).toEqual(expectedQuery);
   });
 
-  it("D. Create tables with SELECT INTO", () => {
+  it("D. Select into temporary table", () => {
     const expectedQuery =
       "SELECT * " +
       "INTO #Bicycles " +
       "FROM AdventureWorks2022.Production.Product " +
       "WHERE ProductNumber LIKE 'BK%'";
+
+    const tempBicyclesTable = new TableDefinition({
+      database: "tempdb",
+      schema: "dbo",
+      name: "#Bicycles",
+      columns: ["Id", "Name"],
+    });
 
     const generatedQuery = new QueryBuilder(
       { p: productTable, temp: tempBicyclesTable },
@@ -209,6 +209,53 @@ describe("QueryBuilder", () => {
         helper.into("temp", { useDatabaseName: false, useSchemaName: false });
         helper.from("p");
         helper.where(productNumberLikeBK);
+      })
+      .build();
+
+    expect(generatedQuery).toEqual(expectedQuery);
+  });
+
+  it("D1. Select into non temporary table", () => {
+    const expectedQuery =
+      "SELECT * " +
+      "INTO dbo.NewProducts " +
+      "FROM Production.Product " +
+      "WHERE ListPrice > 25 " +
+      "AND ListPrice < 100";
+
+    const newProductsTable = new TableDefinition({
+      database: "AdventureWorks2022",
+      schema: "dbo",
+      name: "NewProducts",
+      columns: ["Id", "Name"],
+    });
+
+    const generatedQuery = new QueryBuilder(
+      { p: productTable, newProds: newProductsTable },
+      {
+        useDatabaseName: false,
+        useSchemaName: true,
+        useTableAlias: false,
+      }
+    )
+      .select((helper) => {
+        // Referencias
+        const listPriceGreaterThan25 = helper
+          .getColumnRef("p", "ListPrice")
+          .$isGreaterThan(25);
+
+        const listPriceLessThan100 = helper
+          .getColumnRef("p", "ListPrice")
+          .$isLessThan(100);
+
+        // Query
+        helper.selectAllColumns("p");
+        helper.into("newProds", {
+          useDatabaseName: false,
+          useSchemaName: true,
+        });
+        helper.from("p");
+        helper.where(listPriceGreaterThan25.$and(listPriceLessThan100));
       })
       .build();
 

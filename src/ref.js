@@ -61,18 +61,20 @@ export class ValueRef extends Ref {
 
   /**
    * Crea una comparación ">" entre la referencia actual y otra.
-   * @param {ValueRef} otherRef
+   * @param {TValue} otherValue
    */
-  $isGreaterThan(otherRef) {
-    return new Comparison(this, ">", otherRef);
+  $isGreaterThan(otherValue) {
+    if (otherValue instanceof Ref) return new Comparison(this, ">", otherValue);
+    return new Comparison(this, ">", new LiteralRef(otherValue));
   }
 
   /**
    * Crea una comparación "<" entre la referencia actual y otra.
-   * @param {ValueRef} otherRef
+   * @param {TValue} otherValue
    */
-  $isLessThan(otherRef) {
-    return new Comparison(this, "<", otherRef);
+  $isLessThan(otherValue) {
+    if (otherValue instanceof Ref) return new Comparison(this, "<", otherValue);
+    return new Comparison(this, "<", new LiteralRef(otherValue));
   }
 
   /**
