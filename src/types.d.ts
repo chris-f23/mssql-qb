@@ -132,3 +132,56 @@ type SingleTableColumnComparator<
 type SingleTableWhereCallback<TTarget> = (
   target: SingleTableColumnComparator<TTarget>
 ) => SeachCondition;
+
+type QueryBuilderSelectCallbackHelper<
+  TSource extends Record<string, import("./table-definition").TableDefinition>
+> = {
+  /**
+   * Obtiene una referencia a una columna de una tabla
+   * @param tableAlias - El alias de la tabla
+   * @param tableColumn - La columna de la tabla
+   * @returns
+   */
+  getColumnRef: <
+    TTableAlias extends keyof TSource,
+    TTableColumn extends TSource[TTableAlias]["columns"][number]
+  >(
+    tableAlias: TTableAlias & string,
+    tableColumn: TTableColumn & string
+  ) => import("./ref").ColumnRef;
+
+  selectRef: (ref: import("./ref").Ref) => void;
+
+  selectStar: <TTableAlias extends keyof TSource>(
+    tableAlias: TTableAlias & string
+  ) => void;
+
+  selectColumn: <
+    TTableAlias extends keyof TSource,
+    TTableColumn extends TSource[TTableAlias]["columns"][number]
+  >(
+    tableAlias: TTableAlias & string,
+    tableColumn: TTableColumn & string,
+    columnAlias?: string
+  ) => void;
+
+  from: <TTableAlias extends keyof TSource>(
+    tableAlias: TTableAlias & string
+  ) => void;
+
+  orderBy: <TTableAlias extends keyof TSource>(
+    tableAlias: TTableAlias & string,
+    tableColumn: TSource[TTableAlias]["columns"][number] & string,
+    order: "ASC" | "DESC"
+  ) => void;
+};
+
+type QueryBuilderSelectCallback<TSource> = (
+  helper: QueryBuilderSelectCallbackHelper<TSource>
+) => void;
+
+type QueryBuilderOptions = {
+  useDatabaseName: boolean;
+  useSchemaName: boolean;
+  useTableAlias: boolean;
+};

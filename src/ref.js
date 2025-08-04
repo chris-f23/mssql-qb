@@ -125,6 +125,17 @@ export class ValueRef extends Ref {
 
     return new ValueRef(`${this.value} * ${otherValueRef.build()}`);
   }
+
+  /**
+   *
+   * @param {TValue} otherValue
+   */
+  $add(otherValue) {
+    const otherValueRef =
+      otherValue instanceof Ref ? otherValue : new LiteralRef(otherValue);
+
+    return new ValueRef(`${this.value} + ${otherValueRef.build()}`);
+  }
 }
 
 export class ColumnRef extends ValueRef {
