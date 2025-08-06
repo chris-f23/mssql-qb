@@ -19,6 +19,13 @@ export class Fn {
   }
 
   /**
+   * @param {ValueRef} ref
+   */
+  static COUNT(ref) {
+    return new ValueRef(`COUNT(${ref.build()})`);
+  }
+
+  /**
    * @param {DatePart} datePart
    * @param {ValueRef} startDate
    * @param {ValueRef} endDate

@@ -2,6 +2,7 @@ import { describe, expect, it } from "@jest/globals";
 import { QueryBuilder } from "./query-builder";
 import { TableDefinition } from "./table-definition";
 import { Logical } from "./logical";
+import { Fn } from "./fn";
 
 const productTable = new TableDefinition({
   name: "Product",
@@ -363,6 +364,68 @@ describe("QueryBuilder", () => {
             productModelSubquery
           )
         );
+      })
+      .build();
+
+    expect(generatedQuery).toEqual(expectedQuery);
+  });
+
+  it("F. Use GROUP BY", () => {
+    const expectedQuery =
+      "SELECT p.Name, COUNT(p.*) AS ProductCount " +
+      "FROM Production.Product AS p " +
+      "GROUP BY p.Name";
+
+    const generatedQuery = new QueryBuilder(
+      { p: productTable },
+      {
+        useDatabaseName: false,
+        useSchemaName: true,
+        useTableAlias: true,
+      }
+    )
+      .select((q1) => {
+        // Referencias
+        const nameRef = q1.getColumnRef("p", "Name");
+        const productCountRef = Fn.COUNT(q1.getStarRef("p"));
+
+        // Query
+        q1.selectCalculatedRef(nameRef);
+        q1.selectCalculatedRef(productCountRef, "ProductCount");
+        q1.from("p");
+        q1.groupByRef(nameRef);
+      })
+      .build();
+
+    expect(generatedQuery).toEqual(expectedQuery);
+  });
+
+  it("H. Use GROUP BY and WHERE", () => {
+    const expectedQuery =
+      "SELECT p.Name, COUNT(p.*) AS ProductCount " +
+      "FROM Production.Product AS p " +
+      "WHERE p.ListPrice > 25 " +
+      "GROUP BY p.Name";
+
+    const generatedQuery = new QueryBuilder(
+      { p: productTable },
+      {
+        useDatabaseName: false,
+        useSchemaName: true,
+        useTableAlias: true,
+      }
+    )
+      .select((q1) => {
+        // Referencias
+        const nameRef = q1.getColumnRef("p", "Name");
+        const productCountRef = Fn.COUNT(q1.getStarRef("p"));
+
+        // Query
+        q1.selectCalculatedRef(nameRef);
+        q1.selectCalculatedRef(productCountRef, "ProductCount");
+        q1.from("p");
+        q1.where(q1.getColumnRef("p", "ListPrice").isGreaterThan(25));
+        q1.groupByRef(nameRef);
       })
       .build();
 

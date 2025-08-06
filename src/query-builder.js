@@ -1,3 +1,4 @@
+import { Fn } from "./fn";
 import { AliasedRef, ColumnRef, Ref, SubqueryRef, ValueRef } from "./ref";
 import { TableDefinition } from "./table-definition";
 
@@ -54,6 +55,9 @@ class QueryBuilderSelectCallbackHelper {
   /** @type {Array<{ ref: Ref; order?: "ASC" | "DESC" }>} */
   orderByRefs = [];
 
+  /** @type {Array<Ref>} */
+  groupByRefs = [];
+
   /** @type {null | { tableAlias: keyof TSource; options: Partial<QueryBuilderIntoTableOptions> }} */
   intoTable = null;
 
@@ -87,6 +91,15 @@ class QueryBuilderSelectCallbackHelper {
   getColumnRef(_tableAlias, tableColumn) {
     const tableAlias = this.options.useTableAlias ? _tableAlias : null;
     return new ColumnRef(tableAlias, tableColumn);
+  }
+
+  /**
+   * @template {keyof TSource} TTableAlias
+   * @param {TTableAlias & string} _tableAlias
+   */
+  getStarRef(_tableAlias) {
+    const tableAlias = this.options.useTableAlias ? _tableAlias : null;
+    return new ColumnRef(tableAlias, "*");
   }
 
   /**
@@ -127,6 +140,18 @@ class QueryBuilderSelectCallbackHelper {
   distinct() {
     this.distinctFlag = true;
   }
+
+  // /**
+  //  * @template {keyof TSource} TTableAlias
+  //  * @template {TSource[TTableAlias]["columns"][number]} TTableColumn
+  //  * @param {TTableAlias & string} _tableAlias
+  //  * @param {"*" | (TTableColumn & string)} _tableColumn
+  //  */
+  // selectCount(_tableAlias, _tableColumn, columnAlias) {
+  //   return Fn.COUNT(this.getColumnRef(_tableAlias, _tableColumn)).as(
+  //     columnAlias
+  //   );
+  // }
 
   /**
    * @template {keyof TSource} TTableAlias
@@ -204,6 +229,24 @@ class QueryBuilderSelectCallbackHelper {
     this.orderByRefs.push({ ref, order });
   }
 
+  /**
+   * @template {keyof TSource} TTableAlias
+   * @template {TSource[TTableAlias]["columns"][number]} TTableColumn
+   * @param {TTableAlias & string} _tableAlias
+   * @param {TTableColumn & string} tableColumn
+   */
+  groupByColumn(_tableAlias, tableColumn) {
+    const tableAlias = this.options.useTableAlias ? _tableAlias : null;
+    this.groupByRefs.push(new ColumnRef(tableAlias, tableColumn));
+  }
+
+  /**
+   * @param {ColumnRef|AliasedRef} ref
+   */
+  groupByRef(ref) {
+    this.groupByRefs.push(ref);
+  }
+
   build() {
     const queryParts = [];
 
@@ -266,6 +309,11 @@ class QueryBuilderSelectCallbackHelper {
     if (this.searchCondition) {
       queryParts.push("WHERE");
       queryParts.push(this.searchCondition.build());
+    }
+
+    if (this.groupByRefs.length > 0) {
+      queryParts.push("GROUP BY");
+      queryParts.push(this.groupByRefs.map((ref) => ref.build()).join(", "));
     }
 
     if (this.orderByRefs.length > 0) {
