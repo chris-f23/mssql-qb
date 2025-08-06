@@ -130,35 +130,35 @@ describe("QueryBuilder", () => {
         useTableAlias: true,
       }
     )
-      .select((helper) => {
-        // (REFERENCIAS)
-        const nonDiscountSalesRef = helper
+      .select((q1) => {
+        // Referencias
+        const nonDiscountSalesRef = q1
           .getColumnRef("sod", "OrderQty")
-          .$multiplyBy(helper.getColumnRef("sod", "UnitPrice"));
+          .multipliedBy(q1.getColumnRef("sod", "UnitPrice"));
 
-        const discountsRef = helper
+        const discountsRef = q1
           .getColumnRef("sod", "OrderQty")
-          .$multiplyBy(helper.getColumnRef("sod", "UnitPrice"))
-          .$multiplyBy(helper.getColumnRef("sod", "UnitPriceDiscount"));
+          .multipliedBy(q1.getColumnRef("sod", "UnitPrice"))
+          .multipliedBy(q1.getColumnRef("sod", "UnitPriceDiscount"));
 
-        const productNameRef = helper.selectColumn("p", "Name", "ProductName");
+        const productNameRef = q1.selectColumn("p", "Name", "ProductName");
 
-        const isSameProductId = helper
+        const isSameProductId = q1
           .getColumnRef("p", "ProductID")
-          .$isEqualTo(helper.getColumnRef("sod", "ProductID"));
+          .isEqualTo(q1.getColumnRef("sod", "ProductID"));
 
         // SELECT
-        helper.selectCalculatedRef(nonDiscountSalesRef, "NonDiscountSales");
-        helper.selectCalculatedRef(discountsRef, "Discounts");
+        q1.selectCalculatedRef(nonDiscountSalesRef, "NonDiscountSales");
+        q1.selectCalculatedRef(discountsRef, "Discounts");
 
         // FROM
-        helper.from("p");
+        q1.from("p");
 
         // INNER JOIN
-        helper.innerJoin("sod", isSameProductId);
+        q1.innerJoin("sod", isSameProductId);
 
         // ORDER BY
-        helper.orderByRef(productNameRef, "DESC");
+        q1.orderByRef(productNameRef, "DESC");
       })
       .build();
 
@@ -216,7 +216,7 @@ describe("QueryBuilder", () => {
         // Referencias
         const productNumberLikeBK = helper
           .getColumnRef("p", "ProductNumber")
-          .$isLike(`BK%`);
+          .isLike(`BK%`);
 
         // Query
         helper.selectAllColumns("p");
@@ -256,11 +256,11 @@ describe("QueryBuilder", () => {
         // Referencias
         const listPriceGreaterThan25 = helper
           .getColumnRef("p", "ListPrice")
-          .$isGreaterThan(25);
+          .isGreaterThan(25);
 
         const listPriceLessThan100 = helper
           .getColumnRef("p", "ListPrice")
-          .$isLessThan(100);
+          .isLessThan(100);
 
         // Query
         helper.selectAllColumns("p");
@@ -298,11 +298,11 @@ describe("QueryBuilder", () => {
         const productModelSubquery = q1.createSubquery((q2) => {
           const isSameProductModelId = q2
             .getColumnRef("p", "ProductModelID")
-            .$isEqualTo(q1.getColumnRef("pm", "ProductModelID"));
+            .isEqualTo(q1.getColumnRef("pm", "ProductModelID"));
 
           const productModelNameLike = q2
             .getColumnRef("pm", "Name")
-            .$isLike(`Long-Sleeve Logo Jersey%`);
+            .isLike(`Long-Sleeve Logo Jersey%`);
 
           q2.selectAllColumns("pm");
           q2.from("pm");
@@ -342,11 +342,11 @@ describe("QueryBuilder", () => {
         const productModelSubquery = q1.createSubquery((q2) => {
           const isSameProductModelId = q2
             .getColumnRef("p", "ProductModelID")
-            .$isEqualTo(q1.getColumnRef("pm", "ProductModelID"));
+            .isEqualTo(q1.getColumnRef("pm", "ProductModelID"));
 
           const productModelNameLike = q2
             .getColumnRef("pm", "Name")
-            .$isLike(`Long-Sleeve Logo Jersey%`);
+            .isLike(`Long-Sleeve Logo Jersey%`);
 
           q2.selectColumn("pm", "ProductModelID");
           q2.from("pm");

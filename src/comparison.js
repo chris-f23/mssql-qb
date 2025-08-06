@@ -29,14 +29,14 @@ export class Comparison {
   /**
    * @param {Comparison|Logical} otherComparisonOrCondition
    */
-  $and(otherComparisonOrCondition) {
+  AND(otherComparisonOrCondition) {
     return Logical.and(this, otherComparisonOrCondition);
   }
 
   /**
    * @param {Comparison|Logical} otherComparisonOrCondition
    */
-  $or(otherComparisonOrCondition) {
+  OR(otherComparisonOrCondition) {
     return Logical.or(this, otherComparisonOrCondition);
   }
 }

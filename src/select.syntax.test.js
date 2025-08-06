@@ -201,13 +201,13 @@ describe("SelectBuilder - SYNTAX", () => {
       ])
       .from("person")
       .join("address", ({ person, address }) =>
-        person.get("Id").$isEqualTo(address.get("PersonId"))
+        person.get("Id").isEqualTo(address.get("PersonId"))
       )
       .where(({ person }) =>
         person
           .get("DateOfBirth")
-          .$isGreaterThan(year2000Ref)
-          .$and(person.get("DateOfBirth").$isLessThan(year2020Ref))
+          .isGreaterThan(year2000Ref)
+          .AND(person.get("DateOfBirth").isLessThan(year2020Ref))
       );
 
     expect(qb.build()).toEqual(expectedQuery);

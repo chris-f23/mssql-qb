@@ -94,7 +94,7 @@ describe("UpdateBuilder", () => {
         record.set(
           "VacationHours",
           "=",
-          record.get("VacationHours").$multiplyBy(1.25)
+          record.get("VacationHours").multipliedBy(1.25)
         );
       })
       .top(10);

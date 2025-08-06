@@ -55,7 +55,7 @@ export class ValueRef extends Ref {
    * Crea una comparación "=" entre la referencia actual y otra.
    * @param {TValue} otherValue
    */
-  $isEqualTo(otherValue) {
+  isEqualTo(otherValue) {
     if (otherValue instanceof Ref) return new Comparison(this, "=", otherValue);
     return new Comparison(this, "=", new LiteralRef(otherValue));
   }
@@ -64,7 +64,7 @@ export class ValueRef extends Ref {
    * Crea una comparación ">" entre la referencia actual y otra.
    * @param {TValue} otherValue
    */
-  $isGreaterThan(otherValue) {
+  isGreaterThan(otherValue) {
     if (otherValue instanceof Ref) return new Comparison(this, ">", otherValue);
     return new Comparison(this, ">", new LiteralRef(otherValue));
   }
@@ -73,7 +73,7 @@ export class ValueRef extends Ref {
    * Crea una comparación "<" entre la referencia actual y otra.
    * @param {TValue} otherValue
    */
-  $isLessThan(otherValue) {
+  isLessThan(otherValue) {
     if (otherValue instanceof Ref) return new Comparison(this, "<", otherValue);
     return new Comparison(this, "<", new LiteralRef(otherValue));
   }
@@ -82,7 +82,7 @@ export class ValueRef extends Ref {
    * Crea una comparación ">=" entre la referencia actual y otra.
    * @param {ValueRef} otherRef
    */
-  $isGreaterThanOrEqualTo(otherRef) {
+  isGreaterThanOrEqualTo(otherRef) {
     return new Comparison(this, ">=", otherRef);
   }
 
@@ -90,7 +90,7 @@ export class ValueRef extends Ref {
    * Crea una comparación "<=" entre la referencia actual y otra.
    * @param {ValueRef} otherRef
    */
-  $isLessThanOrEqualTo(otherRef) {
+  isLessThanOrEqualTo(otherRef) {
     return new Comparison(this, "<=", otherRef);
   }
 
@@ -98,7 +98,7 @@ export class ValueRef extends Ref {
    * Crea una comparación "<>" entre la referencia actual y otra.
    * @param {ValueRef} otherRef
    */
-  $isNotEqualTo(otherRef) {
+  isNotEqualTo(otherRef) {
     return new Comparison(this, "<>", otherRef);
   }
 
@@ -107,7 +107,7 @@ export class ValueRef extends Ref {
    * @param {string} pattern
    * @param {string} [escapeChar]
    */
-  $isLike(pattern, escapeChar) {
+  isLike(pattern, escapeChar) {
     return Logical.like(this, pattern, escapeChar);
   }
 
@@ -115,11 +115,11 @@ export class ValueRef extends Ref {
    * @param {TValue} otherValue
    * @returns {CalculatedRef}
    */
-  $multiplyBy(otherValue) {
+  multipliedBy(otherValue) {
     const otherValueRef =
       otherValue instanceof Ref ? otherValue : new LiteralRef(otherValue);
 
-    return new CalculatedRef(`${this.value} * ${otherValueRef.build()}`);
+    return CalculatedRef.multiply(this, otherValueRef);
   }
 
   /**
@@ -127,11 +127,35 @@ export class ValueRef extends Ref {
    * @param {TValue} otherValue
    * @returns {CalculatedRef}
    */
-  $add(otherValue) {
+  plus(otherValue) {
     const otherValueRef =
       otherValue instanceof Ref ? otherValue : new LiteralRef(otherValue);
 
-    return new CalculatedRef(`${this.value} + ${otherValueRef.build()}`);
+    return CalculatedRef.add(this, otherValueRef);
+  }
+
+  /**
+   *
+   * @param {TValue} otherValue
+   * @returns {CalculatedRef}
+   */
+  minus(otherValue) {
+    const otherValueRef =
+      otherValue instanceof Ref ? otherValue : new LiteralRef(otherValue);
+
+    return CalculatedRef.subtract(this, otherValueRef);
+  }
+
+  /**
+   *
+   * @param {TValue} otherValue
+   * @returns {CalculatedRef}
+   */
+  dividedBy(otherValue) {
+    const otherValueRef =
+      otherValue instanceof Ref ? otherValue : new LiteralRef(otherValue);
+
+    return CalculatedRef.divide(this, otherValueRef);
   }
 }
 
@@ -164,10 +188,51 @@ export class AliasedRef extends Ref {
 
 export class CalculatedRef extends ValueRef {
   /**
+   * @private
    * @param {string} expression
    */
   constructor(expression) {
     super(`(${expression})`);
+  }
+
+  /**
+   * Adds two numbers. This addition arithmetic operator can also add a number, in days, to a date.
+   * @param {ValueRef} ref1
+   * @param {ValueRef} ref2
+   * @returns {CalculatedRef}
+   */
+  static add(ref1, ref2) {
+    return new CalculatedRef(`${ref1.build()} + ${ref2.build()}`);
+  }
+
+  /**
+   * Subtracts two numbers (an arithmetic subtraction operator). Can also subtract a number, in days, from a date.
+   * @param {ValueRef} ref1
+   * @param {ValueRef} ref2
+   * @returns {CalculatedRef}
+   */
+  static subtract(ref1, ref2) {
+    return new CalculatedRef(`${ref1.build()} - ${ref2.build()}`);
+  }
+
+  /**
+   * Multiplies two expressions (an arithmetic multiplication operator).
+   * @param {ValueRef} ref1
+   * @param {ValueRef} ref2
+   * @returns {CalculatedRef}
+   */
+  static multiply(ref1, ref2) {
+    return new CalculatedRef(`${ref1.build()} * ${ref2.build()}`);
+  }
+
+  /**
+   * Divides one number by another (an arithmetic division operator).
+   * @param {ValueRef} ref1
+   * @param {ValueRef} ref2
+   * @returns {CalculatedRef}
+   */
+  static divide(ref1, ref2) {
+    return new CalculatedRef(`${ref1.build()} / ${ref2.build()}`);
   }
 }
 
