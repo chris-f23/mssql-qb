@@ -28,6 +28,8 @@ const salesOrderDetailTable = new TableDefinition({
     "ProductID",
     "UnitPrice",
     "UnitPriceDiscount",
+    "SalesOrderID",
+    "CarrierTrackingNumber",
   ],
 });
 
@@ -464,6 +466,147 @@ describe("QueryBuilder", () => {
         q1.from("sod");
         q1.groupByRef(nonDiscountSalesRef);
         q1.orderByRef(nonDiscountSalesRef, "DESC");
+      })
+      .build();
+
+    expect(generatedQuery).toEqual(expectedQuery);
+  });
+
+  it("J. Use GROUP BY with ORDER BY", () => {
+    const expectedQuery =
+      "SELECT ProductID, " +
+      "AVG(UnitPrice) AS [Average Price] " +
+      "FROM Sales.SalesOrderDetail " +
+      "WHERE OrderQty > 10 " +
+      "GROUP BY ProductID " +
+      "ORDER BY AVG(UnitPrice)";
+
+    const generatedQuery = new QueryBuilder(
+      { sod: salesOrderDetailTable },
+      {
+        useDatabaseName: false,
+        useSchemaName: true,
+        useTableAlias: false,
+      }
+    )
+      .select((q1) => {
+        // Referencias
+        const productIdRef = q1.getColumnRef("sod", "ProductID");
+        const averagePriceRef = Fn.AVG(q1.getColumnRef("sod", "UnitPrice"));
+
+        // Query
+        q1.selectCalculatedRef(productIdRef);
+        q1.selectCalculatedRef(averagePriceRef, "[Average Price]");
+        q1.from("sod");
+        q1.where(q1.getColumnRef("sod", "OrderQty").isGreaterThan(10));
+        q1.groupByRef(productIdRef);
+        q1.orderByRef(averagePriceRef);
+      })
+      .build();
+
+    expect(generatedQuery).toEqual(expectedQuery);
+  });
+
+  it("K. Use the HAVING clause", () => {
+    const expectedQuery =
+      "SELECT ProductID " +
+      "FROM Sales.SalesOrderDetail " +
+      "GROUP BY ProductID " +
+      "HAVING AVG(OrderQty) > 5 " +
+      "ORDER BY ProductID";
+
+    const generatedQuery = new QueryBuilder(
+      { sod: salesOrderDetailTable },
+      {
+        useDatabaseName: false,
+        useSchemaName: true,
+        useTableAlias: false,
+      }
+    )
+      .select((q1) => {
+        // Referencias
+        const productIdRef = q1.getColumnRef("sod", "ProductID");
+        const averageOrderQtyRef = Fn.AVG(q1.getColumnRef("sod", "OrderQty"));
+
+        // Query
+        q1.selectCalculatedRef(productIdRef);
+        q1.from("sod");
+        q1.groupByRef(productIdRef);
+        q1.having(averageOrderQtyRef.isGreaterThan(5));
+        q1.orderByRef(productIdRef);
+      })
+      .build();
+
+    expect(generatedQuery).toEqual(expectedQuery);
+  });
+
+  it("K1. Use the HAVING clause with a LIKE expression", () => {
+    const expectedQuery =
+      "SELECT SalesOrderID, CarrierTrackingNumber " +
+      "FROM Sales.SalesOrderDetail " +
+      "GROUP BY SalesOrderID, CarrierTrackingNumber " +
+      "HAVING CarrierTrackingNumber LIKE '4BD%' " +
+      "ORDER BY SalesOrderID";
+
+    const generatedQuery = new QueryBuilder(
+      { sod: salesOrderDetailTable },
+      {
+        useDatabaseName: false,
+        useSchemaName: true,
+        useTableAlias: false,
+      }
+    )
+      .select((q1) => {
+        // Referencias
+        const salesOrderIdRef = q1.getColumnRef("sod", "SalesOrderID");
+        const carrierTrackingNumberRef = q1.getColumnRef(
+          "sod",
+          "CarrierTrackingNumber"
+        );
+
+        // Query
+        q1.selectCalculatedRef(salesOrderIdRef);
+        q1.selectCalculatedRef(carrierTrackingNumberRef);
+        q1.from("sod");
+        q1.groupByRef(salesOrderIdRef, carrierTrackingNumberRef);
+        q1.having(carrierTrackingNumberRef.isLike("4BD%"));
+        q1.orderByRef(salesOrderIdRef);
+      })
+      .build();
+
+    expect(generatedQuery).toEqual(expectedQuery);
+  });
+
+  it("L. Use HAVING and GROUP BY", () => {
+    const generatedQuery =
+      "SELECT ProductID " +
+      "FROM Sales.SalesOrderDetail " +
+      "WHERE UnitPrice < 25 " +
+      "GROUP BY ProductID " +
+      "HAVING AVG(OrderQty) > 5 " +
+      "ORDER BY ProductID";
+
+    const expectedQuery = new QueryBuilder(
+      { sod: salesOrderDetailTable },
+      {
+        useDatabaseName: false,
+        useSchemaName: true,
+        useTableAlias: false,
+      }
+    )
+      .select((q1) => {
+        // Referencias
+        const productIdRef = q1.getColumnRef("sod", "ProductID");
+        const averageOrderQtyRef = Fn.AVG(q1.getColumnRef("sod", "OrderQty"));
+        const unitPriceRef = q1.getColumnRef("sod", "UnitPrice");
+
+        // Query
+        q1.selectCalculatedRef(productIdRef);
+        q1.from("sod");
+        q1.where(unitPriceRef.isLessThan(25));
+        q1.groupByRef(productIdRef);
+        q1.having(averageOrderQtyRef.isGreaterThan(5));
+        q1.orderByRef(productIdRef);
       })
       .build();
 

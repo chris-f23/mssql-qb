@@ -53,16 +53,19 @@ class QueryBuilderSelectCallbackHelper {
   distinctFlag = false;
 
   /** @type {Array<{ ref: Ref; order?: "ASC" | "DESC" }>} */
-  orderByRefs = [];
+  _orderByRefs = [];
 
   /** @type {Array<Ref>} */
-  groupByRefs = [];
+  _groupByRefs = [];
 
   /** @type {null | { tableAlias: keyof TSource; options: Partial<QueryBuilderIntoTableOptions> }} */
   intoTable = null;
 
   /** @type {null | SearchCondition} */
   searchCondition = null;
+
+  /** @type {null | SearchCondition} */
+  havingSearchCondition = null;
 
   /** @type {Array<{ tableAlias: keyof TSource; searchCondition: SearchCondition }>} */
   joinedTables = [];
@@ -215,7 +218,7 @@ class QueryBuilderSelectCallbackHelper {
    */
   orderByColumn(_tableAlias, tableColumn, order) {
     const tableAlias = this.options.useTableAlias ? _tableAlias : null;
-    this.orderByRefs.push({
+    this._orderByRefs.push({
       ref: new ColumnRef(tableAlias, tableColumn),
       order,
     });
@@ -226,7 +229,7 @@ class QueryBuilderSelectCallbackHelper {
    * @param {"ASC" | "DESC"} [order]
    */
   orderByRef(ref, order) {
-    this.orderByRefs.push({ ref, order });
+    this._orderByRefs.push({ ref, order });
   }
 
   /**
@@ -237,14 +240,21 @@ class QueryBuilderSelectCallbackHelper {
    */
   groupByColumn(_tableAlias, tableColumn) {
     const tableAlias = this.options.useTableAlias ? _tableAlias : null;
-    this.groupByRefs.push(new ColumnRef(tableAlias, tableColumn));
+    this._groupByRefs.push(new ColumnRef(tableAlias, tableColumn));
   }
 
   /**
-   * @param {ColumnRef|AliasedRef} ref
+   * @param {(ColumnRef|AliasedRef)[]} refs
    */
-  groupByRef(ref) {
-    this.groupByRefs.push(ref);
+  groupByRef(...refs) {
+    this._groupByRefs.push(...refs);
+  }
+
+  /**
+   * @param {SearchCondition} searchCondition
+   */
+  having(searchCondition) {
+    this.havingSearchCondition = searchCondition;
   }
 
   build() {
@@ -311,15 +321,20 @@ class QueryBuilderSelectCallbackHelper {
       queryParts.push(this.searchCondition.build());
     }
 
-    if (this.groupByRefs.length > 0) {
+    if (this._groupByRefs.length > 0) {
       queryParts.push("GROUP BY");
-      queryParts.push(this.groupByRefs.map((ref) => ref.build()).join(", "));
+      queryParts.push(this._groupByRefs.map((ref) => ref.build()).join(", "));
     }
 
-    if (this.orderByRefs.length > 0) {
+    if (this.havingSearchCondition) {
+      queryParts.push("HAVING");
+      queryParts.push(this.havingSearchCondition.build());
+    }
+
+    if (this._orderByRefs.length > 0) {
       queryParts.push("ORDER BY");
       queryParts.push(
-        this.orderByRefs
+        this._orderByRefs
           .map(({ ref, order }) => {
             const left = ref instanceof AliasedRef ? ref.alias : ref.build();
             const _order = order ? ` ${order}` : "";
