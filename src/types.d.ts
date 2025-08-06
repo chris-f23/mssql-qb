@@ -49,8 +49,8 @@ type BuildTableOptions = {
 type SelectTopMode = "PERCENT"; // "WITH TIES"
 
 type SearchCondition =
-  | import("./search-condition").Comparison
-  | import("./search-condition").Logical;
+  | import("./comparison").Comparison
+  | import("./logical").Logical;
 
 type SelectCallback<TSource> = (
   source: SourceTables<TSource>
@@ -62,7 +62,7 @@ type WhereCallback<TSource> = (
   source: SourceTables<TSource>
 ) => SearchCondition;
 
-type ComparisonOperator = "=" | ">" | "<" | ">=" | "<=" | "<>" | "LIKE";
+type ComparisonOperator = "=" | ">" | "<" | ">=" | "<=" | "<>";
 type LogicalOperator = "AND" | "OR";
 
 type DatePart =
@@ -128,7 +128,7 @@ type SingleTableColumnComparator<
     column: TTarget["columns"][number],
     comp: ComparisonOperator,
     value: TValue
-  ) => import("./search-condition").Comparison;
+  ) => import("./comparison").Comparison;
 };
 
 type SingleTableWhereCallback<TTarget> = (

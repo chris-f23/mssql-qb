@@ -1,5 +1,5 @@
 import { ColumnRef, LiteralRef, Ref, ValueRef } from "./ref";
-import { Comparison } from "./search-condition";
+import { Comparison } from "./comparison";
 import { TableDefinition } from "./table-definition";
 
 /**
@@ -21,7 +21,7 @@ export class UpdateBuilder {
    */
   assignments = [];
 
-  /** @type {null | SeachCondition} */
+  /** @type {null | SearchCondition} */
   #searchCondition = null;
 
   /**

@@ -1,9 +1,10 @@
 import { describe, it, expect } from "@jest/globals";
 import { Fn } from "./fn";
 import { LiteralRef } from "./ref";
-import { Comparison, Condition } from "./search-condition";
 import { SelectBuilder } from "./select";
 import { TableDefinition } from "./table-definition";
+import { Comparison } from "./comparison";
+import { Logical } from "./logical";
 
 const personTable = new TableDefinition({
   name: "Person",
@@ -75,7 +76,7 @@ describe("SelectBuilder - SYNTAX", () => {
           new LiteralRef("2020-01-01")
         );
 
-        return new Condition(isBornAfter2000, "AND", isBornBefore2020);
+        return Logical.and(isBornAfter2000, isBornBefore2020);
       });
 
     expect(qb.build()).toEqual(expectedQuery);
@@ -131,7 +132,7 @@ describe("SelectBuilder - SYNTAX", () => {
         new LiteralRef("2020-01-01")
       );
 
-      return new Condition(isBornAfter2000, "AND", isBornBefore2020);
+      return Logical.and(isBornAfter2000, isBornBefore2020);
     });
 
     expect(qb.build()).toEqual(expectedQuery);
@@ -160,21 +161,19 @@ describe("SelectBuilder - SYNTAX", () => {
         ({ person, address }) =>
           new Comparison(person.get("Id"), "=", address.get("PersonId"))
       )
-      .where(
-        ({ person }) =>
-          new Condition(
-            new Comparison(
-              person.get("DateOfBirth"),
-              ">",
-              new LiteralRef("2000-01-01")
-            ),
-            "AND",
-            new Comparison(
-              person.get("DateOfBirth"),
-              "<",
-              new LiteralRef("2020-01-01")
-            )
+      .where(({ person }) =>
+        Logical.and(
+          new Comparison(
+            person.get("DateOfBirth"),
+            ">",
+            new LiteralRef("2000-01-01")
+          ),
+          new Comparison(
+            person.get("DateOfBirth"),
+            "<",
+            new LiteralRef("2020-01-01")
           )
+        )
       );
 
     expect(qb.build()).toEqual(expectedQuery);

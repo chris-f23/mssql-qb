@@ -1,4 +1,5 @@
-import { Comparison, Logical } from "./search-condition";
+import { Comparison } from "./comparison";
+import { Logical } from "./logical";
 
 /**
  * Una referencia es cualquier valor que pueda ser utilizado en una consulta.

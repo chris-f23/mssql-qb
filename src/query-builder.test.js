@@ -1,8 +1,7 @@
 import { describe, expect, it } from "@jest/globals";
 import { QueryBuilder } from "./query-builder";
 import { TableDefinition } from "./table-definition";
-import { N } from "./ref";
-import { Logical } from "./search-condition";
+import { Logical } from "./logical";
 
 const productTable = new TableDefinition({
   name: "Product",
