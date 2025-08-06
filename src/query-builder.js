@@ -1,33 +1,14 @@
-import { AliasedRef, ColumnRef, Ref } from "./ref";
+import { AliasedRef, ColumnRef, Ref, SubqueryRef, ValueRef } from "./ref";
 import { TableDefinition } from "./table-definition";
 
 /**
  * @template {Record<string, TableDefinition>} TSource
  */
 export class QueryBuilder {
-  /** @type {TSource} */
-  source;
-
-  /** @type {null | keyof TSource} */
-  fromTableAlias = null;
-
-  /** @type {null | { tableAlias: keyof TSource; options: Partial<QueryBuilderIntoTableOptions> }} */
-  intoTable = null;
-
-  /** @type {Array<Ref>} */
-  selectedRefs = [];
-
-  /** @type {boolean} */
-  distinctFlag = false;
-
-  /** @type {Array<{ ref: Ref; order?: "ASC" | "DESC" }>} */
-  orderByRefs = [];
-
-  /** @type {QueryBuilderOptions} */
-  options;
-
-  /** @type {Array<{ tableAlias: keyof TSource; searchCondition: SearchCondition }>} */
-  joinedTables = [];
+  /**
+   * @type {QueryBuilderSelectCallbackHelper<TSource>}
+   */
+  helper;
 
   /**
    * @param {TSource} source
@@ -41,71 +22,186 @@ export class QueryBuilder {
       useTableAlias: true,
       ...options,
     };
+    this.helper = new QueryBuilderSelectCallbackHelper(
+      this.source,
+      this.options
+    );
   }
 
   /**
-   *
-   * @param {QueryBuilderSelectCallback<TSource>} callback
+   * @param {(helper: QueryBuilderSelectCallbackHelper<TSource>) => void} callback
    */
   select(callback) {
-    callback({
-      getColumnRef: (_tableAlias, tableColumn) => {
-        const tableAlias = this.options.useTableAlias ? _tableAlias : null;
-        return new ColumnRef(tableAlias, tableColumn);
-      },
-      selectColumn: (_tableAlias, tableColumn, columnAlias) => {
-        const tableAlias = this.options.useTableAlias ? _tableAlias : null;
-        const _ref = new ColumnRef(tableAlias, tableColumn);
-
-        let ref = columnAlias ? new AliasedRef(_ref, columnAlias) : _ref;
-
-        this.selectedRefs.push(ref);
-        return ref;
-      },
-      selectCalculatedRef: (_ref, columnAlias) => {
-        const ref = columnAlias ? new AliasedRef(_ref, columnAlias) : _ref;
-        this.selectedRefs.push(ref);
-      },
-      selectAllColumns: (_tableAlias) => {
-        const tableAlias = this.options.useTableAlias ? _tableAlias : null;
-        this.selectedRefs.push(new ColumnRef(tableAlias, "*"));
-      },
-
-      distinct: () => {
-        this.distinctFlag = true;
-      },
-      into: (tableAlias, options) => {
-        this.intoTable = {
-          tableAlias,
-          options,
-        };
-      },
-      from: (tableAlias) => {
-        this.fromTableAlias = tableAlias;
-      },
-      where: (searchCondition) => {
-        this.searchCondition = searchCondition;
-      },
-      innerJoin: (tableAlias, searchCondition) => {
-        this.joinedTables.push({
-          tableAlias,
-          searchCondition,
-        });
-      },
-      orderByColumn: (_tableAlias, tableColumn, order) => {
-        const tableAlias = this.options.useTableAlias ? _tableAlias : null;
-        this.orderByRefs.push({
-          ref: new ColumnRef(tableAlias, tableColumn),
-          order,
-        });
-      },
-
-      orderByRef: (ref, order) => {
-        this.orderByRefs.push({ ref, order });
-      },
-    });
-
+    callback(this.helper);
     return this;
+  }
+
+  build() {
+    return this.helper.build();
+  }
+}
+
+/**
+ * @template {Record<string, TableDefinition>} TSource
+ */
+class QueryBuilderSelectCallbackHelper {
+  /** @type {Array<Ref>} */
+  selectedRefs = [];
+
+  /** @type {boolean} */
+  distinctFlag = false;
+
+  /** @type {Array<{ ref: Ref; order?: "ASC" | "DESC" }>} */
+  orderByRefs = [];
+
+  /** @type {null | { tableAlias: keyof TSource; options: Partial<QueryBuilderIntoTableOptions> }} */
+  intoTable = null;
+
+  /** @type {null | SearchCondition} */
+  searchCondition = null;
+
+  /** @type {Array<{ tableAlias: keyof TSource; searchCondition: SearchCondition }>} */
+  joinedTables = [];
+
+  /** @type {null | keyof TSource} */
+  fromTableAlias = null;
+
+  /** @type {QueryBuilderOptions} */
+  options;
+
+  /**
+   * @param {TSource} source
+   * @param {QueryBuilderOptions} options
+   */
+  constructor(source, options) {
+    this.source = source;
+    this.options = options;
+  }
+
+  /**
+   * @template {keyof TSource} TTableAlias
+   * @template {TSource[TTableAlias]["columns"][number]} TTableColumn
+   * @param {TTableAlias & string} _tableAlias
+   * @param {TTableColumn & string} tableColumn
+   */
+  getColumnRef(_tableAlias, tableColumn) {
+    const tableAlias = this.options.useTableAlias ? _tableAlias : null;
+    return new ColumnRef(tableAlias, tableColumn);
+  }
+
+  /**
+   * @template {keyof TSource} TTableAlias
+   * @template {TSource[TTableAlias]["columns"][number]} TTableColumn
+   * @param {TTableAlias & string} _tableAlias
+   * @param {TTableColumn & string} tableColumn
+   * @param {string} [columnAlias]
+   */
+  selectColumn(_tableAlias, tableColumn, columnAlias) {
+    const tableAlias = this.options.useTableAlias ? _tableAlias : null;
+    const _ref = new ColumnRef(tableAlias, tableColumn);
+
+    let ref = columnAlias ? new AliasedRef(_ref, columnAlias) : _ref;
+
+    this.selectedRefs.push(ref);
+    return ref;
+  }
+
+  /**
+   * @param {ValueRef} _ref
+   * @param {string} [columnAlias]
+   */
+  selectCalculatedRef(_ref, columnAlias) {
+    const ref = columnAlias ? new AliasedRef(_ref, columnAlias) : _ref;
+    this.selectedRefs.push(ref);
+  }
+
+  /**
+   * @template {keyof TSource} TTableAlias
+   * @param {TTableAlias & string} _tableAlias
+   */
+  selectAllColumns(_tableAlias) {
+    const tableAlias = this.options.useTableAlias ? _tableAlias : null;
+    this.selectedRefs.push(new ColumnRef(tableAlias, "*"));
+  }
+
+  distinct() {
+    this.distinctFlag = true;
+  }
+
+  /**
+   * @template {keyof TSource} TTableAlias
+   * @param {TTableAlias & string} tableAlias
+   * @param {Partial<QueryBuilderIntoTableOptions>} options
+   */
+  into(tableAlias, options) {
+    this.intoTable = {
+      tableAlias,
+      options,
+    };
+  }
+
+  /**
+   * @template {keyof TSource} TTableAlias
+   * @param {TTableAlias & string} tableAlias
+   */
+  from(tableAlias) {
+    this.fromTableAlias = tableAlias;
+  }
+
+  /**
+   * @param {SearchCondition} searchCondition
+   */
+  where(searchCondition) {
+    this.searchCondition = searchCondition;
+  }
+
+  /**
+   * @param {(helper: QueryBuilderSelectCallbackHelper<TSource>) => void} callback
+   * @returns {SubqueryRef}
+   */
+  createSubquery(callback) {
+    const helper = new QueryBuilderSelectCallbackHelper(
+      this.source,
+      this.options
+    );
+    callback(helper);
+
+    return new SubqueryRef(helper.build());
+  }
+
+  /**
+   * @template {keyof TSource} TTableAlias
+   * @param {TTableAlias & string} tableAlias
+   * @param {SearchCondition} searchCondition
+   */
+  innerJoin(tableAlias, searchCondition) {
+    this.joinedTables.push({
+      tableAlias,
+      searchCondition,
+    });
+  }
+
+  /**
+   * @template {keyof TSource} TTableAlias
+   * @template {TSource[TTableAlias]["columns"][number]} TTableColumn
+   * @param {TTableAlias & string} _tableAlias
+   * @param {TTableColumn & string} tableColumn
+   * @param {"ASC" | "DESC"} [order]
+   */
+  orderByColumn(_tableAlias, tableColumn, order) {
+    const tableAlias = this.options.useTableAlias ? _tableAlias : null;
+    this.orderByRefs.push({
+      ref: new ColumnRef(tableAlias, tableColumn),
+      order,
+    });
+  }
+
+  /**
+   * @param {ColumnRef|AliasedRef} ref
+   * @param {"ASC" | "DESC"} [order]
+   */
+  orderByRef(ref, order) {
+    this.orderByRefs.push({ ref, order });
   }
 
   build() {

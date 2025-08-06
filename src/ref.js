@@ -211,6 +211,15 @@ export function N() {
   return new LiteralRef(arguments[0][0], true);
 }
 
+export class SubqueryRef extends ValueRef {
+  /**
+   * @param {string} subquery
+   */
+  constructor(subquery) {
+    super(`(${subquery})`);
+  }
+}
+
 // export class TableRef {
 //   /** @type {string|undefined} */
 //   databaseName;

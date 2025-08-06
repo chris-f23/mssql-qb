@@ -2,12 +2,20 @@ import { describe, expect, it } from "@jest/globals";
 import { QueryBuilder } from "./query-builder";
 import { TableDefinition } from "./table-definition";
 import { N } from "./ref";
+import { Logical } from "./search-condition";
 
 const productTable = new TableDefinition({
   name: "Product",
   database: "AdventureWorks2022",
   schema: "Production",
-  columns: ["ProductID", "Name", "ProductNumber", "ListPrice", "Color"],
+  columns: [
+    "ProductID",
+    "Name",
+    "ProductNumber",
+    "ListPrice",
+    "Color",
+    "ProductModelID",
+  ],
 });
 
 const salesOrderDetailTable = new TableDefinition({
@@ -28,6 +36,13 @@ const employeeTable = new TableDefinition({
   database: "AdventureWorks2022",
   schema: "HumanResources",
   columns: ["JobTitle"],
+});
+
+const productModelTable = new TableDefinition({
+  name: "ProductModel",
+  database: "AdventureWorks2022",
+  schema: "Production",
+  columns: ["ProductModelID", "Name"],
 });
 
 describe("QueryBuilder", () => {
@@ -255,7 +270,100 @@ describe("QueryBuilder", () => {
           useSchemaName: true,
         });
         helper.from("p");
-        helper.where(listPriceGreaterThan25.$and(listPriceLessThan100));
+        helper.where(Logical.and(listPriceGreaterThan25, listPriceLessThan100));
+      })
+      .build();
+
+    expect(generatedQuery).toEqual(expectedQuery);
+  });
+
+  it("E. Use correlated subqueries", () => {
+    const expectedQuery =
+      "SELECT DISTINCT p.Name " +
+      "FROM Production.Product AS p " +
+      "WHERE EXISTS (SELECT pm.* " +
+      "FROM Production.ProductModel AS pm " +
+      "WHERE p.ProductModelID = pm.ProductModelID " +
+      "AND pm.Name LIKE 'Long-Sleeve Logo Jersey%')";
+
+    const generatedQuery = new QueryBuilder(
+      { p: productTable, pm: productModelTable },
+      {
+        useDatabaseName: false,
+        useSchemaName: true,
+        useTableAlias: true,
+      }
+    )
+      .select((q1) => {
+        // Referencias
+        const productModelSubquery = q1.createSubquery((q2) => {
+          const isSameProductModelId = q2
+            .getColumnRef("p", "ProductModelID")
+            .$isEqualTo(q1.getColumnRef("pm", "ProductModelID"));
+
+          const productModelNameLike = q2
+            .getColumnRef("pm", "Name")
+            .$isLike(`Long-Sleeve Logo Jersey%`);
+
+          q2.selectAllColumns("pm");
+          q2.from("pm");
+          q2.where(Logical.and(isSameProductModelId, productModelNameLike));
+        });
+
+        // Query
+        q1.distinct();
+        q1.selectColumn("p", "Name");
+        q1.from("p");
+        q1.where(Logical.exists(productModelSubquery));
+      })
+      .build();
+
+    expect(generatedQuery).toEqual(expectedQuery);
+  });
+
+  it("E1. Use correlated subqueries with IN instead of EXISTS", () => {
+    const expectedQuery =
+      "SELECT DISTINCT p.Name " +
+      "FROM Production.Product AS p " +
+      "WHERE p.ProductModelID IN (SELECT pm.ProductModelID " +
+      "FROM Production.ProductModel AS pm " +
+      "WHERE p.ProductModelID = pm.ProductModelID " +
+      "AND pm.Name LIKE 'Long-Sleeve Logo Jersey%')";
+
+    const generatedQuery = new QueryBuilder(
+      { p: productTable, pm: productModelTable },
+      {
+        useDatabaseName: false,
+        useSchemaName: true,
+        useTableAlias: true,
+      }
+    )
+      .select((q1) => {
+        // Referencias
+        const productModelSubquery = q1.createSubquery((q2) => {
+          const isSameProductModelId = q2
+            .getColumnRef("p", "ProductModelID")
+            .$isEqualTo(q1.getColumnRef("pm", "ProductModelID"));
+
+          const productModelNameLike = q2
+            .getColumnRef("pm", "Name")
+            .$isLike(`Long-Sleeve Logo Jersey%`);
+
+          q2.selectColumn("pm", "ProductModelID");
+          q2.from("pm");
+          q2.where(Logical.and(isSameProductModelId, productModelNameLike));
+        });
+
+        // Query
+        q1.distinct();
+        q1.selectColumn("p", "Name");
+        q1.from("p");
+        q1.where(
+          Logical.in(
+            q1.getColumnRef("p", "ProductModelID"),
+            productModelSubquery
+          )
+        );
       })
       .build();
 

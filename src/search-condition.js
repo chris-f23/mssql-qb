@@ -1,4 +1,4 @@
-import { Ref } from "./ref";
+import { Ref, SubqueryRef } from "./ref";
 
 export class Comparison {
   /** @private */
@@ -63,5 +63,56 @@ export class Condition {
 
   build() {
     return `${this.leftRef.build()} ${this.operator} ${this.rightRef.build()}`;
+  }
+}
+
+export class Logical {
+  /** @private @type {string} */
+  expression;
+
+  /**
+   * @param {string} expression
+   */
+  constructor(expression) {
+    this.expression = expression;
+  }
+
+  /**
+   * TRUE if a subquery contains any rows.
+   * @param {SubqueryRef} subquery
+   */
+  static exists(subquery) {
+    return new Logical(`EXISTS ${subquery.build()}`);
+  }
+
+  /**
+   * TRUE if both Boolean expressions are TRUE.
+   * @param {Comparison} leftComparison
+   * @param {Comparison} rightComparison
+   */
+  static and(leftComparison, rightComparison) {
+    return new Logical(
+      `${leftComparison.build()} AND ${rightComparison.build()}`
+    );
+  }
+
+  /**
+   * TRUE if the operand is equal to one of a list of expressions.
+   * @param {Ref} leftRef
+   * @param {SubqueryRef | Array<Ref>} subqueryOrRefs
+   */
+  static in(leftRef, subqueryOrRefs) {
+    if (subqueryOrRefs instanceof SubqueryRef) {
+      return new Logical(`${leftRef.build()} IN ${subqueryOrRefs.build()}`);
+    }
+    return new Logical(
+      `${leftRef.build()} IN (${subqueryOrRefs
+        .map((ref) => ref.build())
+        .join(", ")})`
+    );
+  }
+
+  build() {
+    return this.expression;
   }
 }

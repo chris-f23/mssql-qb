@@ -50,7 +50,7 @@ type SelectTopMode = "PERCENT"; // "WITH TIES"
 
 type SearchCondition =
   | import("./search-condition").Comparison
-  | import("./search-condition").Condition;
+  | import("./search-condition").Logical;
 
 type SelectCallback<TSource> = (
   source: SourceTables<TSource>
@@ -134,75 +134,6 @@ type SingleTableColumnComparator<
 type SingleTableWhereCallback<TTarget> = (
   target: SingleTableColumnComparator<TTarget>
 ) => SearchCondition;
-
-type QueryBuilderSelectCallbackHelper<
-  TSource extends Record<string, import("./table-definition").TableDefinition>
-> = {
-  /**
-   * Obtiene una referencia a una columna de una tabla
-   * @param tableAlias - El alias de la tabla
-   * @param tableColumn - La columna de la tabla
-   * @returns
-   */
-  getColumnRef: <
-    TTableAlias extends keyof TSource,
-    TTableColumn extends TSource[TTableAlias]["columns"][number]
-  >(
-    tableAlias: TTableAlias & string,
-    tableColumn: TTableColumn & string
-  ) => import("./ref").ColumnRef;
-
-  selectCalculatedRef: (
-    ref: import("./ref").ValueRef,
-    columnAlias?: string
-  ) => void;
-
-  selectAllColumns: <TTableAlias extends keyof TSource>(
-    tableAlias: TTableAlias & string
-  ) => void;
-
-  distinct: () => void;
-
-  into: <TTableAlias extends keyof TSource>(
-    tableAlias: TTableAlias & string,
-    options: Partial<QueryBuilderIntoTableOptions>
-  ) => void;
-
-  selectColumn: <
-    TTableAlias extends keyof TSource,
-    TTableColumn extends TSource[TTableAlias]["columns"][number]
-  >(
-    tableAlias: TTableAlias & string,
-    tableColumn: TTableColumn & string,
-    columnAlias?: string
-  ) => import("./ref").ColumnRef | import("./ref").AliasedRef;
-
-  from: <TTableAlias extends keyof TSource>(
-    tableAlias: TTableAlias & string
-  ) => void;
-
-  innerJoin: <TTableAlias extends keyof TSource>(
-    tableAlias: TTableAlias & string,
-    searchCondition: SearchCondition
-  ) => void;
-
-  where: (searchCondition: SearchCondition) => void;
-
-  orderByColumn: <TTableAlias extends keyof TSource>(
-    tableAlias: TTableAlias & string,
-    tableColumn: TSource[TTableAlias]["columns"][number] & string,
-    order?: "ASC" | "DESC"
-  ) => void;
-
-  orderByRef: (
-    ref: import("./ref").ColumnRef | import("./ref").AliasedRef,
-    order: "ASC" | "DESC"
-  ) => void;
-};
-
-type QueryBuilderSelectCallback<TSource> = (
-  helper: QueryBuilderSelectCallbackHelper<TSource>
-) => void;
 
 type QueryBuilderOptions = {
   useDatabaseName: boolean;
