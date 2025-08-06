@@ -1,44 +1,42 @@
 import { Fn } from "./fn";
-import { AliasedRef, ColumnRef, Ref, SubqueryRef, ValueRef } from "./ref";
+import {
+  AliasedRef,
+  CalculatedRef,
+  ColumnRef,
+  Ref,
+  SubqueryRef,
+  ValueRef,
+} from "./ref";
 import { TableDefinition } from "./table-definition";
 
 /**
  * @template {Record<string, TableDefinition>} TSource
  */
-export class QueryBuilder {
-  /**
-   * @type {QueryBuilderSelectCallbackHelper<TSource>}
-   */
-  helper;
-
+export class QueryFactory {
   /**
    * @param {TSource} source
-   * @param {Partial<QueryBuilderOptions>} [options]
    */
-  constructor(source, options) {
+  constructor(source) {
     this.source = source;
-    this.options = {
-      useDatabaseName: true,
-      useSchemaName: true,
-      useTableAlias: true,
-      ...options,
-    };
-    this.helper = new QueryBuilderSelectCallbackHelper(
-      this.source,
-      this.options
-    );
   }
 
   /**
-   * @param {(helper: QueryBuilderSelectCallbackHelper<TSource>) => void} callback
+   * @param {Partial<QueryBuilderOptions>} [options]
    */
-  select(callback) {
-    callback(this.helper);
-    return this;
+  createSelectQueryBuilder(options) {
+    return new QueryBuilderSelectCallbackHelper(this.source, options);
   }
 
-  build() {
-    return this.helper.build();
+  /**
+   *
+   * @param {Partial<QueryBuilderOptions>} options
+   * @param {(helper: QueryBuilderSelectCallbackHelper) => void} callback
+   * @returns
+   */
+  createInlineSelectQuery(options, callback) {
+    const helper = new QueryBuilderSelectCallbackHelper(this.source, options);
+    callback(helper);
+    return helper.build();
   }
 }
 
@@ -78,11 +76,17 @@ class QueryBuilderSelectCallbackHelper {
 
   /**
    * @param {TSource} source
-   * @param {QueryBuilderOptions} options
+   * @param {Partial<QueryBuilderOptions>} [options]
    */
   constructor(source, options) {
     this.source = source;
-    this.options = options;
+
+    this.options = {
+      useDatabaseName: true,
+      useSchemaName: true,
+      useTableAlias: true,
+      ...options,
+    };
   }
 
   /**
@@ -90,10 +94,11 @@ class QueryBuilderSelectCallbackHelper {
    * @template {TSource[TTableAlias]["columns"][number]} TTableColumn
    * @param {TTableAlias & string} _tableAlias
    * @param {TTableColumn & string} tableColumn
+   * @param {string} [columnAlias]
    */
-  getColumnRef(_tableAlias, tableColumn) {
+  getColumnRef(_tableAlias, tableColumn, columnAlias) {
     const tableAlias = this.options.useTableAlias ? _tableAlias : null;
-    return new ColumnRef(tableAlias, tableColumn);
+    return new ColumnRef(tableAlias, tableColumn, columnAlias);
   }
 
   /**
@@ -123,12 +128,19 @@ class QueryBuilderSelectCallbackHelper {
   }
 
   /**
-   * @param {ValueRef} _ref
+   * @param {CalculatedRef} _ref
    * @param {string} [columnAlias]
    */
   selectCalculatedRef(_ref, columnAlias) {
     const ref = columnAlias ? new AliasedRef(_ref, columnAlias) : _ref;
     this.selectedRefs.push(ref);
+  }
+
+  /**
+   * @param {ColumnRef} columnRef
+   */
+  selectColumnRef(columnRef) {
+    this.selectedRefs.push(columnRef);
   }
 
   /**
@@ -187,7 +199,7 @@ class QueryBuilderSelectCallbackHelper {
    * @param {(helper: QueryBuilderSelectCallbackHelper<TSource>) => void} callback
    * @returns {SubqueryRef}
    */
-  createSubquery(callback) {
+  createInlineSubqueryRef(callback) {
     const helper = new QueryBuilderSelectCallbackHelper(
       this.source,
       this.options
@@ -225,7 +237,7 @@ class QueryBuilderSelectCallbackHelper {
   }
 
   /**
-   * @param {ColumnRef|AliasedRef} ref
+   * @param {ColumnRef|AliasedRef|CalculatedRef} ref
    * @param {"ASC" | "DESC"} [order]
    */
   orderByRef(ref, order) {
@@ -244,7 +256,7 @@ class QueryBuilderSelectCallbackHelper {
   }
 
   /**
-   * @param {(ColumnRef|AliasedRef)[]} refs
+   * @param {(ColumnRef|AliasedRef|CalculatedRef)[]} refs
    */
   groupByRef(...refs) {
     this._groupByRefs.push(...refs);
@@ -256,6 +268,10 @@ class QueryBuilderSelectCallbackHelper {
   having(searchCondition) {
     this.havingSearchCondition = searchCondition;
   }
+
+  // asSubquery() {
+  //   return new SubqueryRef(this.build());
+  // }
 
   build() {
     const queryParts = [];
@@ -323,7 +339,16 @@ class QueryBuilderSelectCallbackHelper {
 
     if (this._groupByRefs.length > 0) {
       queryParts.push("GROUP BY");
-      queryParts.push(this._groupByRefs.map((ref) => ref.build()).join(", "));
+      queryParts.push(
+        this._groupByRefs
+          .map((ref) => {
+            if (ref instanceof ColumnRef && ref.alias) {
+              return ref.alias;
+            }
+            return ref.build();
+          })
+          .join(", ")
+      );
     }
 
     if (this.havingSearchCondition) {
@@ -336,10 +361,15 @@ class QueryBuilderSelectCallbackHelper {
       queryParts.push(
         this._orderByRefs
           .map(({ ref, order }) => {
-            const left = ref instanceof AliasedRef ? ref.alias : ref.build();
+            // const left = ref instanceof AliasedRef ? ref.alias : ref.build();
             const _order = order ? ` ${order}` : "";
 
-            return `${left}${_order}`;
+            // return `${left}${_order}`;
+
+            if (ref instanceof ColumnRef && ref.alias) {
+              return `${ref.alias}${_order}`;
+            }
+            return `${ref.build()}${_order}`;
           })
           .join(", ")
       );

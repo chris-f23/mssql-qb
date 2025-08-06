@@ -160,17 +160,27 @@ export class ValueRef extends Ref {
 }
 
 export class ColumnRef extends ValueRef {
+  /** @readonly @type {string|undefined} */
+  alias;
+
   /**
    * Crea una referencia a una columna de una tabla.
    * @param {string|null} tableAlias - El alias de la tabla
    * @param {string} columnName - El nombre de la columna de la tabla
+   * @param {string} [alias] - El alias de la columna
    */
-  constructor(tableAlias, columnName) {
+  constructor(tableAlias, columnName, alias) {
     if (tableAlias) {
       super(`${tableAlias}.${columnName}`);
     } else {
       super(columnName);
     }
+    this.alias = alias;
+  }
+
+  build() {
+    if (!this.alias) return super.build();
+    return `${super.build()} AS ${this.alias}`;
   }
 }
 
