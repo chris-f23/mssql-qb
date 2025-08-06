@@ -26,6 +26,13 @@ export class Fn {
   }
 
   /**
+   * @param {ValueRef} ref
+   */
+  static AVG(ref) {
+    return new ValueRef(`AVG(${ref.build()})`);
+  }
+
+  /**
    * @param {DatePart} datePart
    * @param {ValueRef} startDate
    * @param {ValueRef} endDate

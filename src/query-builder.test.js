@@ -402,30 +402,33 @@ describe("QueryBuilder", () => {
 
   it("H. Use GROUP BY and WHERE", () => {
     const expectedQuery =
-      "SELECT p.Name, COUNT(p.*) AS ProductCount " +
-      "FROM Production.Product AS p " +
-      "WHERE p.ListPrice > 25 " +
-      "GROUP BY p.Name";
+      "SELECT ProductModelID, " +
+      "AVG(ListPrice) AS [Average List Price] " +
+      "FROM Production.Product " +
+      "WHERE ListPrice > 1000 " +
+      "GROUP BY ProductModelID " +
+      "ORDER BY ProductModelID";
 
     const generatedQuery = new QueryBuilder(
       { p: productTable },
       {
         useDatabaseName: false,
         useSchemaName: true,
-        useTableAlias: true,
+        useTableAlias: false,
       }
     )
       .select((q1) => {
         // Referencias
-        const nameRef = q1.getColumnRef("p", "Name");
-        const productCountRef = Fn.COUNT(q1.getStarRef("p"));
+        const productModelIdRef = q1.getColumnRef("p", "ProductModelID");
+        const averageListPriceRef = Fn.AVG(q1.getColumnRef("p", "ListPrice"));
 
         // Query
-        q1.selectCalculatedRef(nameRef);
-        q1.selectCalculatedRef(productCountRef, "ProductCount");
+        q1.selectCalculatedRef(productModelIdRef);
+        q1.selectCalculatedRef(averageListPriceRef, "[Average List Price]");
         q1.from("p");
-        q1.where(q1.getColumnRef("p", "ListPrice").isGreaterThan(25));
-        q1.groupByRef(nameRef);
+        q1.where(q1.getColumnRef("p", "ListPrice").isGreaterThan(1000));
+        q1.groupByRef(productModelIdRef);
+        q1.orderByRef(productModelIdRef);
       })
       .build();
 
