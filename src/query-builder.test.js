@@ -434,4 +434,39 @@ describe("QueryBuilder", () => {
 
     expect(generatedQuery).toEqual(expectedQuery);
   });
+
+  it("I. Use GROUP BY with an expression", () => {
+    const expectedQuery =
+      "SELECT AVG(OrderQty) AS [Average Quantity], " +
+      "(OrderQty * UnitPrice) AS NonDiscountSales " +
+      "FROM Sales.SalesOrderDetail " +
+      "GROUP BY (OrderQty * UnitPrice) " +
+      "ORDER BY (OrderQty * UnitPrice) DESC";
+
+    const generatedQuery = new QueryBuilder(
+      { sod: salesOrderDetailTable },
+      {
+        useDatabaseName: false,
+        useSchemaName: true,
+        useTableAlias: false,
+      }
+    )
+      .select((q1) => {
+        // Referencias
+        const averageQuantityRef = Fn.AVG(q1.getColumnRef("sod", "OrderQty"));
+        const nonDiscountSalesRef = q1
+          .getColumnRef("sod", "OrderQty")
+          .multipliedBy(q1.getColumnRef("sod", "UnitPrice"));
+
+        // Query
+        q1.selectCalculatedRef(averageQuantityRef, "[Average Quantity]");
+        q1.selectCalculatedRef(nonDiscountSalesRef, "NonDiscountSales");
+        q1.from("sod");
+        q1.groupByRef(nonDiscountSalesRef);
+        q1.orderByRef(nonDiscountSalesRef, "DESC");
+      })
+      .build();
+
+    expect(generatedQuery).toEqual(expectedQuery);
+  });
 });
