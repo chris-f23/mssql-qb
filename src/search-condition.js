@@ -87,8 +87,8 @@ export class Logical {
 
   /**
    * TRUE if both Boolean expressions are TRUE.
-   * @param {Comparison} leftComparison
-   * @param {Comparison} rightComparison
+   * @param {Comparison|Logical} leftComparison
+   * @param {Comparison|Logical} rightComparison
    */
   static and(leftComparison, rightComparison) {
     return new Logical(
@@ -110,6 +110,22 @@ export class Logical {
         .map((ref) => ref.build())
         .join(", ")})`
     );
+  }
+
+  /**
+   * TRUE if the operand matches a pattern.
+   * @param {Ref} matchExpression
+   * @param {string} pattern
+   * @param {string} [escapeCharacter]
+   */
+  static like(matchExpression, pattern, escapeCharacter) {
+    if (escapeCharacter !== undefined) {
+      return new Logical(
+        `${matchExpression.build()} LIKE '${pattern}' ESCAPE '${escapeCharacter}'`
+      );
+    }
+
+    return new Logical(`${matchExpression.build()} LIKE '${pattern}'`);
   }
 
   build() {

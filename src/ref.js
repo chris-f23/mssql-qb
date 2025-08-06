@@ -1,4 +1,4 @@
-import { Comparison } from "./search-condition";
+import { Comparison, Logical } from "./search-condition";
 
 /**
  * Una referencia es cualquier valor que pueda ser utilizado en una consulta.
@@ -103,18 +103,11 @@ export class ValueRef extends Ref {
 
   /**
    * Crea una comparación LIKE entre la referencia actual y un patrón.
-   * @param {string | LiteralRef} pattern
+   * @param {string} pattern
    * @param {string} [escapeChar]
    */
   $isLike(pattern, escapeChar) {
-    const _pattern = pattern instanceof Ref ? pattern.build() : pattern;
-
-    const rightRef =
-      escapeChar !== undefined
-        ? new Ref(`'${_pattern}' ESCAPE '${escapeChar}'`)
-        : new Ref(`'${_pattern}'`);
-
-    return new Comparison(this, "LIKE", rightRef);
+    return Logical.like(this, pattern, escapeChar);
   }
 
   /**
