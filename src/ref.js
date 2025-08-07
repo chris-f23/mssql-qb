@@ -80,18 +80,18 @@ export class ValueRef extends Ref {
 
   /**
    * Crea una comparación ">=" entre la referencia actual y otra.
-   * @param {ValueRef} otherRef
+   * @param {TValue} otherValue
    */
-  isGreaterThanOrEqualTo(otherRef) {
-    return new Comparison(this, ">=", otherRef);
+  isGreaterThanOrEqualTo(otherValue) {
+    return new Comparison(this, ">=", otherValue);
   }
 
   /**
    * Crea una comparación "<=" entre la referencia actual y otra.
-   * @param {ValueRef} otherRef
+   * @param {TValue} otherValue
    */
-  isLessThanOrEqualTo(otherRef) {
-    return new Comparison(this, "<=", otherRef);
+  isLessThanOrEqualTo(otherValue) {
+    return new Comparison(this, "<=", otherValue);
   }
 
   /**

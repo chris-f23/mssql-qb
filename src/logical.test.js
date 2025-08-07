@@ -181,4 +181,116 @@ describe("Logical", () => {
       expect(testExpression.isNotIn(subquery).build()).toEqual(expectedQuery);
     });
   });
+
+  describe("OR", () => {
+    it("A. Use OR against the same expression", () => {
+      const expectedQuery =
+        "e.JobTitle = 'Design Engineer' OR " + "e.JobTitle = 'Tool Designer'";
+      const jobTitleRef = new ColumnRef("e", "JobTitle");
+
+      const isDesignEngineer = jobTitleRef.isEqualTo("Design Engineer");
+      const isToolDesigner = jobTitleRef.isEqualTo("Tool Designer");
+
+      expect(Logical.or(isDesignEngineer, isToolDesigner).build()).toEqual(
+        expectedQuery
+      );
+      expect(isDesignEngineer.or(isToolDesigner).build()).toEqual(
+        expectedQuery
+      );
+    });
+
+    it("B. Use OR against different expressions", () => {
+      const expectedQuery = "BaseRate < 10 OR HireDate >= '2001-01-01'";
+
+      const baseRateRef = new ColumnRef(null, "BaseRate");
+      const hireDateRef = new ColumnRef(null, "HireDate");
+
+      const isBaseRateLessThan10 = baseRateRef.isLessThan(10);
+      const isHireDateAfter2001 =
+        hireDateRef.isGreaterThanOrEqualTo("2001-01-01");
+
+      expect(
+        Logical.or(isBaseRateLessThan10, isHireDateAfter2001).build()
+      ).toEqual(expectedQuery);
+      expect(isBaseRateLessThan10.or(isHireDateAfter2001).build()).toEqual(
+        expectedQuery
+      );
+    });
+
+    it("C. Use OR against 3 expressions", () => {
+      const expectedQuery =
+        "e.JobTitle = 'Design Engineer' OR " +
+        "e.JobTitle = 'Tool Designer' OR " +
+        "e.JobTitle = 'Marketing Assistant'";
+      const jobTitleRef = new ColumnRef("e", "JobTitle");
+
+      const isDesignEngineer = jobTitleRef.isEqualTo("Design Engineer");
+      const isToolDesigner = jobTitleRef.isEqualTo("Tool Designer");
+      const isMarketingAssistant = jobTitleRef.isEqualTo("Marketing Assistant");
+
+      expect(
+        Logical.or(
+          isDesignEngineer,
+          isToolDesigner,
+          isMarketingAssistant
+        ).build()
+      ).toEqual(expectedQuery);
+
+      expect(
+        isDesignEngineer.or(isToolDesigner.or(isMarketingAssistant)).build()
+      ).toEqual(expectedQuery);
+    });
+
+    it("D. Use OR against 3 expression while grouping expressions 1 and 2", () => {
+      const expectedQuery =
+        "(e.JobTitle = 'Design Engineer' OR " +
+        "e.JobTitle = 'Tool Designer') OR " +
+        "e.JobTitle = 'Marketing Assistant'";
+      const jobTitleRef = new ColumnRef("e", "JobTitle");
+
+      const isDesignEngineer = jobTitleRef.isEqualTo("Design Engineer");
+      const isToolDesigner = jobTitleRef.isEqualTo("Tool Designer");
+      const isMarketingAssistant = jobTitleRef.isEqualTo("Marketing Assistant");
+
+      expect(
+        Logical.or(
+          Logical.or(isDesignEngineer, isToolDesigner).asGroup(),
+          isMarketingAssistant
+        ).build()
+      ).toEqual(expectedQuery);
+
+      expect(
+        isDesignEngineer
+          .or(isToolDesigner)
+          .asGroup()
+          .or(isMarketingAssistant)
+          .build()
+      ).toEqual(expectedQuery);
+    });
+
+    it("D1. Use OR against 3 expression while grouping expressions 2 and 3", () => {
+      const expectedQuery =
+        "e.JobTitle = 'Design Engineer' OR " +
+        "(e.JobTitle = 'Tool Designer' OR " +
+        "e.JobTitle = 'Marketing Assistant')";
+      const jobTitleRef = new ColumnRef("e", "JobTitle");
+
+      const isDesignEngineer = jobTitleRef.isEqualTo("Design Engineer");
+      const isToolDesigner = jobTitleRef.isEqualTo("Tool Designer");
+      const isMarketingAssistant = jobTitleRef.isEqualTo("Marketing Assistant");
+
+      expect(
+        Logical.or(
+          isDesignEngineer,
+          Logical.or(isToolDesigner, isMarketingAssistant).asGroup()
+        ).build()
+      ).toEqual(expectedQuery);
+
+      expect(
+        isDesignEngineer
+          .or(isToolDesigner.or(isMarketingAssistant).asGroup())
+          .build()
+      ).toEqual(expectedQuery);
+    });
+  });
 });

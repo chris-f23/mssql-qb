@@ -1,4 +1,4 @@
-import { Ref } from "./ref";
+import { LiteralRef, Ref } from "./ref";
 import { Logical } from "./logical";
 
 export class Comparison {
@@ -14,12 +14,17 @@ export class Comparison {
   /**
    * @param {Ref} leftExpression
    * @param {ComparisonOperator} operator
-   * @param {Ref} rightExpression
+   * @param {TValue} rightExpression
    */
   constructor(leftExpression, operator, rightExpression) {
     this.leftExpression = leftExpression.build();
     this.operator = operator;
-    this.rightExpression = rightExpression.build();
+
+    if (rightExpression instanceof Ref) {
+      this.rightExpression = rightExpression.build();
+    } else {
+      this.rightExpression = new LiteralRef(rightExpression).build();
+    }
   }
 
   build() {
@@ -29,14 +34,16 @@ export class Comparison {
   /**
    * @param {Comparison|Logical} otherComparisonOrCondition
    */
-  AND(otherComparisonOrCondition) {
+  and(otherComparisonOrCondition) {
     return Logical.and(this, otherComparisonOrCondition);
   }
 
   /**
    * @param {Comparison|Logical} otherComparisonOrCondition
    */
-  OR(otherComparisonOrCondition) {
+  or(otherComparisonOrCondition) {
     return Logical.or(this, otherComparisonOrCondition);
   }
+
+  
 }

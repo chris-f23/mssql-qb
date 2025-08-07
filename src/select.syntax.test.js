@@ -207,7 +207,7 @@ describe("SelectBuilder - SYNTAX", () => {
         person
           .get("DateOfBirth")
           .isGreaterThan(year2000Ref)
-          .AND(person.get("DateOfBirth").isLessThan(year2020Ref))
+          .and(person.get("DateOfBirth").isLessThan(year2020Ref))
       );
 
     expect(qb.build()).toEqual(expectedQuery);

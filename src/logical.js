@@ -52,14 +52,29 @@ export class Logical {
     );
   }
 
+  // /**
+  //  * TRUE if either Boolean expression is TRUE.
+  //  * @param {BooleanExpression|Logical} leftComparison
+  //  * @param {BooleanExpression|Logical} rightComparison
+  //  * @param {boolean} [wrapInParens]
+  //  */
+  // static or(leftComparison, rightComparison, wrapInParens = false) {
+  //   return new Logical(
+  //     `${
+  //       wrapInParens ? "(" : ""
+  //     }${leftComparison.build()} OR ${rightComparison.build()}${
+  //       wrapInParens ? ")" : ""
+  //     }`
+  //   );
+  // }
+
   /**
-   * TRUE if either Boolean expression is TRUE.
-   * @param {BooleanExpression|Logical} leftComparison
-   * @param {BooleanExpression|Logical} rightComparison
+   * @param {(BooleanExpression|Logical)[]} comparisons
+   * @returns
    */
-  static or(leftComparison, rightComparison) {
+  static or(...comparisons) {
     return new Logical(
-      `${leftComparison.build()} OR ${rightComparison.build()}`
+      `${comparisons.map((comparison) => comparison.build()).join(" OR ")}`
     );
   }
 
@@ -152,5 +167,21 @@ export class Logical {
 
   build() {
     return this.expression;
+  }
+
+  asGroup() {
+    return new Logical(`(${this.build()})`);
+  }
+
+  /**
+   * @param {(BooleanExpression|Logical)[]} comparisons
+   * @returns
+   */
+  or(...comparisons) {
+    return new Logical(
+      `${this.build()} OR ${comparisons
+        .map((comparison) => comparison.build())
+        .join(" OR ")}`
+    );
   }
 }
