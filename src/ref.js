@@ -107,11 +107,7 @@ export class ValueRef extends Ref {
    * @param {string} [escapeCharacter]
    */
   isLike(pattern, escapeCharacter) {
-    return Logical.like({
-      matchExpression: this,
-      pattern,
-      escapeCharacter: escapeCharacter,
-    });
+    return Logical.like(this, pattern, escapeCharacter);
   }
 
   /**
@@ -119,12 +115,7 @@ export class ValueRef extends Ref {
    * @param {string} [escapeCharacter]
    */
   isNotLike(pattern, escapeCharacter) {
-    return Logical.like({
-      matchExpression: this,
-      pattern,
-      escapeCharacter: escapeCharacter,
-      not: true,
-    });
+    return Logical.notLike(this, pattern, escapeCharacter);
   }
 
   /**

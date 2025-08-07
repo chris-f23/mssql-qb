@@ -9,12 +9,9 @@ describe("Logical", () => {
       const matchExpression = new ColumnRef("ph", "PhoneNumber");
       const pattern = "415%";
 
-      expect(
-        Logical.like({
-          matchExpression,
-          pattern,
-        }).build()
-      ).toEqual(expectedQuery);
+      expect(Logical.like(matchExpression, pattern).build()).toEqual(
+        expectedQuery
+      );
 
       expect(matchExpression.isLike(pattern).build()).toEqual(expectedQuery);
     });
@@ -24,13 +21,9 @@ describe("Logical", () => {
       const matchExpression = new ColumnRef("ph", "PhoneNumber");
       const pattern = "415%";
 
-      expect(
-        Logical.like({
-          matchExpression,
-          pattern,
-          not: true,
-        }).build()
-      ).toEqual(expectedQuery);
+      expect(Logical.notLike(matchExpression, pattern).build()).toEqual(
+        expectedQuery
+      );
 
       expect(matchExpression.isNotLike(pattern).build()).toEqual(expectedQuery);
     });
@@ -42,11 +35,7 @@ describe("Logical", () => {
       const escapeCharacter = "!";
 
       expect(
-        Logical.like({
-          matchExpression,
-          pattern,
-          escapeCharacter,
-        }).build()
+        Logical.like(matchExpression, pattern, escapeCharacter).build()
       ).toEqual(expectedQuery);
 
       expect(matchExpression.isLike(pattern, escapeCharacter).build()).toEqual(
@@ -59,12 +48,9 @@ describe("Logical", () => {
       const matchExpression = new ColumnRef(null, "FirstName");
       const pattern = "[CS]heryl";
 
-      expect(
-        Logical.like({
-          matchExpression,
-          pattern,
-        }).build()
-      ).toEqual(expectedQuery);
+      expect(Logical.like(matchExpression, pattern).build()).toEqual(
+        expectedQuery
+      );
 
       expect(matchExpression.isLike(pattern).build()).toEqual(expectedQuery);
     });
@@ -74,12 +60,9 @@ describe("Logical", () => {
       const matchExpression = new ColumnRef(null, "au_lname");
       const pattern = "de[^l]%";
 
-      expect(
-        Logical.like({
-          matchExpression,
-          pattern,
-        }).build()
-      ).toEqual(expectedQuery);
+      expect(Logical.like(matchExpression, pattern).build()).toEqual(
+        expectedQuery
+      );
 
       expect(matchExpression.isLike(pattern).build()).toEqual(expectedQuery);
     });
@@ -89,12 +72,9 @@ describe("Logical", () => {
       const matchExpression = new ColumnRef(null, "phone");
       const pattern = "6_2%";
 
-      expect(
-        Logical.like({
-          matchExpression,
-          pattern,
-        }).build()
-      ).toEqual(expectedQuery);
+      expect(Logical.like(matchExpression, pattern).build()).toEqual(
+        expectedQuery
+      );
 
       expect(matchExpression.isLike(pattern).build()).toEqual(expectedQuery);
     });
