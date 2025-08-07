@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
 import { Logical } from "./logical";
-import { ColumnRef } from "./ref";
+import { ColumnRef, SubqueryRef } from "./ref";
 
 describe("Logical", () => {
   describe("LIKE", () => {
@@ -97,6 +97,47 @@ describe("Logical", () => {
       ).toEqual(expectedQuery);
 
       expect(matchExpression.isLike(pattern).build()).toEqual(expectedQuery);
+    });
+  });
+  describe("EXISTS", () => {
+    it("A. Use NULL in a subquery to still return a result set", () => {
+      const expectedQuery = "EXISTS (SELECT NULL)";
+      const subquery = new SubqueryRef("SELECT NULL");
+
+      expect(Logical.exists(subquery).build()).toEqual(expectedQuery);
+    });
+
+    it("B. Use EXISTS with a subquery", () => {
+      const expectedQuery =
+        "EXISTS (SELECT * " +
+        "FROM HumanResources.Employee AS b " +
+        "WHERE a.BusinessEntityID = b.BusinessEntityID " +
+        "AND a.LastName = 'Johnson')";
+
+      const subquery = new SubqueryRef(
+        "SELECT * " +
+          "FROM HumanResources.Employee AS b " +
+          "WHERE a.BusinessEntityID = b.BusinessEntityID " +
+          "AND a.LastName = 'Johnson'"
+      );
+
+      expect(Logical.exists(subquery).build()).toEqual(expectedQuery);
+    });
+    it("C. Use NOT EXISTS", () => {
+      const expectedQuery =
+        "NOT EXISTS (SELECT * " +
+        "FROM HumanResources.Employee AS b " +
+        "WHERE a.BusinessEntityID = b.BusinessEntityID " +
+        "AND a.LastName = 'Johnson')";
+
+      const subquery = new SubqueryRef(
+        "SELECT * " +
+          "FROM HumanResources.Employee AS b " +
+          "WHERE a.BusinessEntityID = b.BusinessEntityID " +
+          "AND a.LastName = 'Johnson'"
+      );
+
+      expect(Logical.notExists(subquery).build()).toEqual(expectedQuery);
     });
   });
 });

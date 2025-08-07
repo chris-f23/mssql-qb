@@ -20,7 +20,25 @@ export class Logical {
    * @param {SubqueryRef} subquery
    */
   static exists(subquery) {
-    return new Logical(`EXISTS ${subquery.build()}`);
+    return this.#exists({ subquery });
+  }
+
+  /**
+   * TRUE if a subquery does not contain any rows.
+   * @param {SubqueryRef} subquery
+   */
+  static notExists(subquery) {
+    return this.#exists({ subquery, not: true });
+  }
+
+  /**
+   * TRUE if a subquery contains any rows.
+   * @param {Object} params
+   * @param {SubqueryRef} params.subquery
+   * @param {boolean} [params.not]
+   */
+  static #exists({ subquery, not }) {
+    return new Logical(`${not ? "NOT " : ""}EXISTS ${subquery.build()}`);
   }
 
   /**
