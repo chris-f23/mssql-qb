@@ -1,4 +1,4 @@
-import { SubqueryRef, Ref } from "./ref";
+import { SubqueryRef, Ref, LiteralRef } from "./ref";
 
 /**
  * @typedef {import("./comparison").Comparison} BooleanExpression
@@ -65,20 +65,55 @@ export class Logical {
 
   /**
    * TRUE if the operand is equal to one of a list of expressions.
-   * @param {Ref} leftRef
-   * @param {SubqueryRef | Array<Ref>} subqueryOrRefs
+   * @param {Object} params
+   * @param {Ref} params.testExpression
+   * @param {SubqueryRef | Array<TValue>} params.subqueryOrExpressionArray
+   * @param {boolean} [params.not]
    */
-  static in(leftRef, subqueryOrRefs) {
-    if (subqueryOrRefs instanceof SubqueryRef) {
-      return new Logical(`${leftRef.build()} IN ${subqueryOrRefs.build()}`);
+  static #in({ testExpression, subqueryOrExpressionArray, not }) {
+    if (subqueryOrExpressionArray instanceof SubqueryRef) {
+      return new Logical(
+        `${testExpression.build()} ${
+          not ? "NOT " : ""
+        }IN ${subqueryOrExpressionArray.build()}`
+      );
     }
     return new Logical(
-      `${leftRef.build()} IN (${subqueryOrRefs
-        .map((ref) => ref.build())
+      `${testExpression.build()} ${
+        not ? "NOT " : ""
+      }IN (${subqueryOrExpressionArray
+        .map((ref) => {
+          if (ref instanceof Ref) return ref.build();
+          return new LiteralRef(ref).build();
+        })
         .join(", ")})`
     );
   }
 
+  /**
+   * TRUE if the operand is equal to one of a list of expressions.
+   * @param {Ref} testExpression
+   * @param {SubqueryRef | Array<TValue>} subqueryOrExpressionArray
+   */
+  static in(testExpression, subqueryOrExpressionArray) {
+    return this.#in({
+      testExpression,
+      subqueryOrExpressionArray,
+    });
+  }
+
+  /**
+   * TRUE if the operand is not equal to one of a list of expressions.
+   * @param {Ref} testExpression
+   * @param {SubqueryRef | Array<TValue>} subqueryOrExpressionArray
+   */
+  static notIn(testExpression, subqueryOrExpressionArray) {
+    return this.#in({
+      testExpression,
+      subqueryOrExpressionArray,
+      not: true,
+    });
+  }
   /**
    * TRUE if the operand matches a pattern.
    * @param {Object} params

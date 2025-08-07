@@ -119,6 +119,20 @@ export class ValueRef extends Ref {
   }
 
   /**
+   * @param {SubqueryRef | Array<TValue>} subqueryOrExpressionArray
+   */
+  isIn(subqueryOrExpressionArray) {
+    return Logical.in(this, subqueryOrExpressionArray);
+  }
+
+  /**
+   * @param {SubqueryRef | Array<TValue>} subqueryOrExpressionArray
+   */
+  isNotIn(subqueryOrExpressionArray) {
+    return Logical.notIn(this, subqueryOrExpressionArray);
+  }
+
+  /**
    * @param {TValue} otherValue
    * @returns {CalculatedRef}
    */

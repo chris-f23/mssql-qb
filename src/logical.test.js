@@ -120,4 +120,65 @@ describe("Logical", () => {
       expect(Logical.notExists(subquery).build()).toEqual(expectedQuery);
     });
   });
+
+  describe("IN", () => {
+    it("A. Use IN with an expression array", () => {
+      const expectedQuery =
+        "e.JobTitle IN ('Design Engineer', 'Tool Designer', 'Marketing Assistant')";
+
+      const testExpression = new ColumnRef("e", "JobTitle");
+      const expressionArray = [
+        "Design Engineer",
+        "Tool Designer",
+        "Marketing Assistant",
+      ];
+
+      expect(Logical.in(testExpression, expressionArray).build()).toEqual(
+        expectedQuery
+      );
+
+      expect(testExpression.isIn(expressionArray).build()).toEqual(
+        expectedQuery
+      );
+    });
+
+    it("B. Using IN with a subquery", () => {
+      const expectedQuery =
+        "p.BusinessEntityID IN " +
+        "(SELECT BusinessEntityID " +
+        "FROM Sales.SalesPerson " +
+        "WHERE SalesQuota > 250000)";
+
+      const testExpression = new ColumnRef("p", "BusinessEntityID");
+      const subquery = new SubqueryRef(
+        "SELECT BusinessEntityID " +
+          "FROM Sales.SalesPerson " +
+          "WHERE SalesQuota > 250000"
+      );
+
+      expect(Logical.in(testExpression, subquery).build()).toEqual(
+        expectedQuery
+      );
+      expect(testExpression.isIn(subquery).build()).toEqual(expectedQuery);
+    });
+    it("C. Using NOT IN with a subquery", () => {
+      const expectedQuery =
+        "p.BusinessEntityID NOT IN " +
+        "(SELECT BusinessEntityID " +
+        "FROM Sales.SalesPerson " +
+        "WHERE SalesQuota > 250000)";
+
+      const testExpression = new ColumnRef("p", "BusinessEntityID");
+      const subquery = new SubqueryRef(
+        "SELECT BusinessEntityID " +
+          "FROM Sales.SalesPerson " +
+          "WHERE SalesQuota > 250000"
+      );
+
+      expect(Logical.notIn(testExpression, subquery).build()).toEqual(
+        expectedQuery
+      );
+      expect(testExpression.isNotIn(subquery).build()).toEqual(expectedQuery);
+    });
+  });
 });
