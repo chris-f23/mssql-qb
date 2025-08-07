@@ -63,18 +63,18 @@ export class Logical {
 
   /**
    * TRUE if the operand matches a pattern.
-   * @param {Ref} matchExpression
-   * @param {string} pattern
-   * @param {string} [escapeCharacter]
+   * @param {Object} params
+   * @param {Ref} params.matchExpression
+   * @param {string} params.pattern
+   * @param {string} [params.escapeCharacter]
+   * @param {boolean} [params.not]
    */
-  static like(matchExpression, pattern, escapeCharacter) {
-    if (escapeCharacter !== undefined) {
-      return new Logical(
-        `${matchExpression.build()} LIKE '${pattern}' ESCAPE '${escapeCharacter}'`
-      );
-    }
-
-    return new Logical(`${matchExpression.build()} LIKE '${pattern}'`);
+  static like({ matchExpression, pattern, escapeCharacter, not }) {
+    return new Logical(
+      `${matchExpression.build()} ${not ? "NOT " : ""}LIKE '${pattern}'${
+        escapeCharacter !== undefined ? ` ESCAPE '${escapeCharacter}'` : ""
+      }`
+    );
   }
 
   build() {

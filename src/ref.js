@@ -103,12 +103,28 @@ export class ValueRef extends Ref {
   }
 
   /**
-   * Crea una comparación LIKE entre la referencia actual y un patrón.
    * @param {string} pattern
-   * @param {string} [escapeChar]
+   * @param {string} [escapeCharacter]
    */
-  isLike(pattern, escapeChar) {
-    return Logical.like(this, pattern, escapeChar);
+  isLike(pattern, escapeCharacter) {
+    return Logical.like({
+      matchExpression: this,
+      pattern,
+      escapeCharacter: escapeCharacter,
+    });
+  }
+
+  /**
+   * @param {string} pattern
+   * @param {string} [escapeCharacter]
+   */
+  isNotLike(pattern, escapeCharacter) {
+    return Logical.like({
+      matchExpression: this,
+      pattern,
+      escapeCharacter: escapeCharacter,
+      not: true,
+    });
   }
 
   /**
