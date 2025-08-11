@@ -15,6 +15,16 @@ export class Logical {
     this.expression = expression;
   }
 
+  asGroup() {
+    return new Logical(`(${this.build()})`);
+  }
+
+  build() {
+    return this.expression;
+  }
+
+  //#region EXISTS
+
   /**
    * TRUE if a subquery contains any rows.
    * @param {SubqueryRef} subquery
@@ -41,42 +51,67 @@ export class Logical {
     return new Logical(`${not ? "NOT " : ""}EXISTS ${subquery.build()}`);
   }
 
+  // #endregion
+
+  // #region AND
+
   /**
    * TRUE if both Boolean expressions are TRUE.
-   * @param {BooleanExpression|Logical} leftComparison
-   * @param {BooleanExpression|Logical} rightComparison
+   * @param {(BooleanExpression|Logical)[]} comparisons
    */
-  static and(leftComparison, rightComparison) {
+  static #and(...comparisons) {
     return new Logical(
-      `${leftComparison.build()} AND ${rightComparison.build()}`
+      `${comparisons.map((comparison) => comparison.build()).join(" AND ")}`
     );
   }
 
-  // /**
-  //  * TRUE if either Boolean expression is TRUE.
-  //  * @param {BooleanExpression|Logical} leftComparison
-  //  * @param {BooleanExpression|Logical} rightComparison
-  //  * @param {boolean} [wrapInParens]
-  //  */
-  // static or(leftComparison, rightComparison, wrapInParens = false) {
-  //   return new Logical(
-  //     `${
-  //       wrapInParens ? "(" : ""
-  //     }${leftComparison.build()} OR ${rightComparison.build()}${
-  //       wrapInParens ? ")" : ""
-  //     }`
-  //   );
-  // }
+  /**
+   * TRUE if both Boolean expressions are TRUE.
+   * @param {(BooleanExpression|Logical)[]} comparisons
+   */
+  static and(...comparisons) {
+    return this.#and(...comparisons);
+  }
+
+  /**
+   * @param {(BooleanExpression|Logical)[]} comparisons
+   * @returns
+   */
+  and(...comparisons) {
+    return Logical.#and(this, ...comparisons);
+  }
+
+  // #endregion
+  // #region OR
 
   /**
    * @param {(BooleanExpression|Logical)[]} comparisons
    * @returns
    */
   static or(...comparisons) {
+    return this.#or(...comparisons);
+  }
+
+  /**
+   * @param {(BooleanExpression|Logical)[]} comparisons
+   * @returns
+   */
+  static #or(...comparisons) {
     return new Logical(
       `${comparisons.map((comparison) => comparison.build()).join(" OR ")}`
     );
   }
+
+  /**
+   * @param {(BooleanExpression|Logical)[]} comparisons
+   * @returns
+   */
+  or(...comparisons) {
+    return Logical.#or(this, ...comparisons);
+  }
+
+  // #endregion
+  // #region IN
 
   /**
    * TRUE if the operand is equal to one of a list of expressions.
@@ -129,6 +164,10 @@ export class Logical {
       not: true,
     });
   }
+
+  // #endregion
+  // #region LIKE
+
   /**
    * TRUE if the operand matches a pattern.
    * @param {Object} params
@@ -165,23 +204,5 @@ export class Logical {
     return this.#like({ matchExpression, pattern, escapeCharacter, not: true });
   }
 
-  build() {
-    return this.expression;
-  }
-
-  asGroup() {
-    return new Logical(`(${this.build()})`);
-  }
-
-  /**
-   * @param {(BooleanExpression|Logical)[]} comparisons
-   * @returns
-   */
-  or(...comparisons) {
-    return new Logical(
-      `${this.build()} OR ${comparisons
-        .map((comparison) => comparison.build())
-        .join(" OR ")}`
-    );
-  }
+  // #endregion
 }

@@ -32,18 +32,16 @@ export class Comparison {
   }
 
   /**
-   * @param {Comparison|Logical} otherComparisonOrCondition
+   * @param {(Comparison|Logical)[]} comparisons
    */
-  and(otherComparisonOrCondition) {
-    return Logical.and(this, otherComparisonOrCondition);
+  and(...comparisons) {
+    return Logical.and(this, ...comparisons);
   }
 
   /**
-   * @param {Comparison|Logical} otherComparisonOrCondition
+   * @param {(Comparison|Logical)[]} comparisons
    */
-  or(otherComparisonOrCondition) {
-    return Logical.or(this, otherComparisonOrCondition);
+  or(...comparisons) {
+    return Logical.or(this, ...comparisons);
   }
-
-  
 }

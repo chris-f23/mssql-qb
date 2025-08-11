@@ -120,7 +120,6 @@ describe("Logical", () => {
       expect(Logical.notExists(subquery).build()).toEqual(expectedQuery);
     });
   });
-
   describe("IN", () => {
     it("A. Use IN with an expression array", () => {
       const expectedQuery =
@@ -181,9 +180,8 @@ describe("Logical", () => {
       expect(testExpression.isNotIn(subquery).build()).toEqual(expectedQuery);
     });
   });
-
   describe("OR", () => {
-    it("A. Use OR against the same expression", () => {
+    it("A. Use OR with 2 expressions, same field", () => {
       const expectedQuery =
         "e.JobTitle = 'Design Engineer' OR " + "e.JobTitle = 'Tool Designer'";
       const jobTitleRef = new ColumnRef("e", "JobTitle");
@@ -199,7 +197,7 @@ describe("Logical", () => {
       );
     });
 
-    it("B. Use OR against different expressions", () => {
+    it("B. Use OR with 2 expressions, different fields", () => {
       const expectedQuery = "BaseRate < 10 OR HireDate >= '2001-01-01'";
 
       const baseRateRef = new ColumnRef(null, "BaseRate");
@@ -217,7 +215,7 @@ describe("Logical", () => {
       );
     });
 
-    it("C. Use OR against 3 expressions", () => {
+    it("C. Use OR with 3 expressions", () => {
       const expectedQuery =
         "e.JobTitle = 'Design Engineer' OR " +
         "e.JobTitle = 'Tool Designer' OR " +
@@ -237,11 +235,11 @@ describe("Logical", () => {
       ).toEqual(expectedQuery);
 
       expect(
-        isDesignEngineer.or(isToolDesigner.or(isMarketingAssistant)).build()
+        isDesignEngineer.or(isToolDesigner, isMarketingAssistant).build()
       ).toEqual(expectedQuery);
     });
 
-    it("D. Use OR against 3 expression while grouping expressions 1 and 2", () => {
+    it("D. Use OR with 3 expression while grouping expressions 1 and 2", () => {
       const expectedQuery =
         "(e.JobTitle = 'Design Engineer' OR " +
         "e.JobTitle = 'Tool Designer') OR " +
@@ -268,7 +266,7 @@ describe("Logical", () => {
       ).toEqual(expectedQuery);
     });
 
-    it("D1. Use OR against 3 expression while grouping expressions 2 and 3", () => {
+    it("D1. Use OR with 3 expression while grouping expressions 2 and 3", () => {
       const expectedQuery =
         "e.JobTitle = 'Design Engineer' OR " +
         "(e.JobTitle = 'Tool Designer' OR " +
@@ -290,6 +288,131 @@ describe("Logical", () => {
         isDesignEngineer
           .or(isToolDesigner.or(isMarketingAssistant).asGroup())
           .build()
+      ).toEqual(expectedQuery);
+    });
+  });
+  describe("AND", () => {
+    it("A. Using AND with 2 expressions", () => {
+      const expectedQuery =
+        "JobTitle = 'Marketing Assistant' AND VacationHours > 41";
+
+      const jobTitleRef = new ColumnRef(null, "JobTitle");
+      const vacationHoursRef = new ColumnRef(null, "VacationHours");
+
+      const isMarketingAssistant = jobTitleRef.isEqualTo("Marketing Assistant");
+      const isVacationHoursGreaterThan41 = vacationHoursRef.isGreaterThan(41);
+
+      expect(
+        Logical.and(isMarketingAssistant, isVacationHoursGreaterThan41).build()
+      ).toEqual(expectedQuery);
+
+      expect(
+        isMarketingAssistant.and(isVacationHoursGreaterThan41).build()
+      ).toEqual(expectedQuery);
+    });
+
+    it("B. Using AND with 3 expressions", () => {
+      const expectedQuery =
+        "e.JobTitle = 'Design Engineer' AND " +
+        "e.Qualification = 'SE' AND " +
+        "e.ProjectID = 1";
+
+      const jobTitleRef = new ColumnRef("e", "JobTitle");
+      const qualificationRef = new ColumnRef("e", "Qualification");
+      const projectIDRef = new ColumnRef("e", "ProjectID");
+
+      const isDesignEngineer = jobTitleRef.isEqualTo("Design Engineer");
+      const isSE = qualificationRef.isEqualTo("SE");
+      const isProjectID1 = projectIDRef.isEqualTo(1);
+
+      expect(Logical.and(isDesignEngineer, isSE, isProjectID1).build()).toEqual(
+        expectedQuery
+      );
+
+      expect(isDesignEngineer.and(isSE, isProjectID1).build()).toEqual(
+        expectedQuery
+      );
+    });
+  });
+
+  describe("AND with OR", () => {
+    it("A. Using AND with OR", () => {
+      const expectedQuery =
+        "e.JobTitle = 'Design Engineer' OR " +
+        "e.JobTitle = 'Tool Designer' AND " +
+        "e.Qualification = 'SE'";
+
+      const jobTitleRef = new ColumnRef("e", "JobTitle");
+      const qualificationRef = new ColumnRef("e", "Qualification");
+
+      const isDesignEngineer = jobTitleRef.isEqualTo("Design Engineer");
+      const isToolDesigner = jobTitleRef.isEqualTo("Tool Designer");
+      const isSE = qualificationRef.isEqualTo("SE");
+
+      expect(
+        Logical.or(isDesignEngineer, Logical.and(isToolDesigner, isSE)).build()
+      ).toEqual(expectedQuery);
+
+      expect(isDesignEngineer.or(isToolDesigner.and(isSE)).build()).toEqual(
+        expectedQuery
+      );
+
+      expect(isDesignEngineer.or(isToolDesigner).and(isSE).build()).toEqual(
+        expectedQuery
+      );
+    });
+
+    it("B. Using AND with OR while grouping expressions 1 and 2", () => {
+      const expectedQuery =
+        "(e.JobTitle = 'Design Engineer' OR " +
+        "e.JobTitle = 'Tool Designer') AND " +
+        "e.Qualification = 'SE'";
+
+      const jobTitleRef = new ColumnRef("e", "JobTitle");
+      const qualificationRef = new ColumnRef("e", "Qualification");
+
+      const isDesignEngineer = jobTitleRef.isEqualTo("Design Engineer");
+      const isToolDesigner = jobTitleRef.isEqualTo("Tool Designer");
+      const isSE = qualificationRef.isEqualTo("SE");
+
+      const isDesignEngineerOrToolDesigner = Logical.or(
+        isDesignEngineer,
+        isToolDesigner
+      ).asGroup();
+
+      expect(isDesignEngineerOrToolDesigner.and(isSE).build()).toEqual(
+        expectedQuery
+      );
+
+      expect(
+        isDesignEngineer.or(isToolDesigner).asGroup().and(isSE).build()
+      ).toEqual(expectedQuery);
+    });
+
+    it("C. Using AND with OR", () => {
+      const expectedQuery =
+        "Country = 'Spain' AND (CustomerName LIKE 'G%' OR CustomerName LIKE 'R%')";
+
+      const countryRef = new ColumnRef(null, "Country");
+      const customerNameRef = new ColumnRef(null, "CustomerName");
+
+      const isSpain = countryRef.isEqualTo("Spain");
+      const startsWithG = customerNameRef.isLike("G%");
+      const startsWithR = customerNameRef.isLike("R%");
+
+      expect(
+        Logical.and(
+          isSpain,
+          Logical.or(startsWithG, startsWithR).asGroup()
+        ).build()
+      ).toEqual(expectedQuery);
+
+      const startsWithGOrR = Logical.or(startsWithG, startsWithR).asGroup();
+
+      expect(isSpain.and(startsWithGOrR).build()).toEqual(expectedQuery);
+
+      expect(
+        isSpain.and(startsWithG.or(startsWithR).asGroup()).build()
       ).toEqual(expectedQuery);
     });
   });
