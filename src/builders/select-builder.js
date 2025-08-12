@@ -80,6 +80,21 @@ export class SelectBuilder {
   }
 
   /**
+   * @template {keyof TSource} TTableAlias
+   * @template {"*" | TSource[TTableAlias]["columns"][number]} TTableColumn
+   * @param {TTableAlias & string} _tableAlias
+   * @param {TTableColumn[]} tableColumns
+   * @returns
+   */
+  selectColumns(_tableAlias, tableColumns) {
+    const tableAlias = this.options.useTableAlias ? _tableAlias : null;
+    this.selectedRefs.push(
+      ...tableColumns.map((col) => new ColumnRef(tableAlias, col))
+    );
+    return this;
+  }
+
+  /**
    * @param {CalculatedRef} _ref
    * @param {string} [columnAlias]
    */

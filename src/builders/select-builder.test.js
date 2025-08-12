@@ -180,15 +180,24 @@ describe("SelectBuilder", () => {
       }
     );
 
-    const generatedQuery = sb
-      .selectColumn("p", "name")
-      .selectColumn("p", "color")
-      .selectColumn("p", "price")
-      .from("p")
-      .orderByColumn("p", "name", "ASC")
-      .orderByColumn("p", "color", "ASC")
-      .build();
+    expect(
+      sb
+        .selectColumn("p", "name")
+        .selectColumn("p", "color")
+        .selectColumn("p", "price")
+        .from("p")
+        .orderByColumn("p", "name", "ASC")
+        .orderByColumn("p", "color", "ASC")
+        .build()
+    ).toEqual(expectedQuery);
 
-    expect(generatedQuery).toEqual(expectedQuery);
+    expect(
+      sb
+        .selectColumns("p", ["name", "color", "price"])
+        .from("p")
+        .orderByColumn("p", "name", "ASC")
+        .orderByColumn("p", "color", "ASC")
+        .build()
+    ).toEqual(expectedQuery);
   });
 });
