@@ -396,7 +396,7 @@ describe("QueryFactory", () => {
         (qb) => {
           // Referencias
           const nameRef = qb.getColumnRef("p", "Name");
-          const productCountRef = Fn.COUNT(qb.getStarRef("p"));
+          const productCountRef = Fn.COUNT(qb.getColumnRef("p", "*"));
 
           // Query
           qb.selectCalculatedRef(nameRef);

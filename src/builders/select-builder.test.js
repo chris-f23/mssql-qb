@@ -166,4 +166,29 @@ describe("SelectBuilder", () => {
     const generatedQuery = selectBuilder.build();
     expect(generatedQuery).toEqual(expectedQuery);
   });
+
+  it("G. Should select all products ordered alphabetically by name and color", () => {
+    const expectedQuery =
+      "SELECT p.name, p.color, p.price FROM Production.Product AS p ORDER BY p.name ASC, p.color ASC";
+
+    const sb = new SelectBuilder(
+      { p: productTable },
+      {
+        useDatabaseName: false,
+        useSchemaName: true,
+        useTableAlias: true,
+      }
+    );
+
+    const generatedQuery = sb
+      .selectColumn("p", "name")
+      .selectColumn("p", "color")
+      .selectColumn("p", "price")
+      .from("p")
+      .orderByColumn("p", "name", "ASC")
+      .orderByColumn("p", "color", "ASC")
+      .build();
+
+    expect(generatedQuery).toEqual(expectedQuery);
+  });
 });

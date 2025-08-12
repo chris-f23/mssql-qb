@@ -22,7 +22,7 @@ export class QueryFactory {
   /**
    *
    * @param {Partial<QueryBuilderOptions>} options
-   * @param {(helper: SelectBuilder) => void} callback
+   * @param {(helper: SelectBuilder<TSource>) => void} callback
    * @returns
    */
   createInlineSelectQuery(options, callback) {

@@ -54,21 +54,12 @@ export class SelectBuilder {
    * @template {keyof TSource} TTableAlias
    * @template {TSource[TTableAlias]["columns"][number]} TTableColumn
    * @param {TTableAlias & string} _tableAlias
-   * @param {TTableColumn & string} tableColumn
+   * @param {("*" | (TTableColumn & string))} tableColumn
    * @param {string} [columnAlias]
    */
   getColumnRef(_tableAlias, tableColumn, columnAlias) {
     const tableAlias = this.options.useTableAlias ? _tableAlias : null;
     return new ColumnRef(tableAlias, tableColumn, columnAlias);
-  }
-
-  /**
-   * @template {keyof TSource} TTableAlias
-   * @param {TTableAlias & string} _tableAlias
-   */
-  getStarRef(_tableAlias) {
-    const tableAlias = this.options.useTableAlias ? _tableAlias : null;
-    return new ColumnRef(tableAlias, "*");
   }
 
   /**
@@ -85,7 +76,7 @@ export class SelectBuilder {
     let ref = columnAlias ? new AliasedRef(_ref, columnAlias) : _ref;
 
     this.selectedRefs.push(ref);
-    return ref;
+    return this;
   }
 
   /**
@@ -95,6 +86,7 @@ export class SelectBuilder {
   selectCalculatedRef(_ref, columnAlias) {
     const ref = columnAlias ? new AliasedRef(_ref, columnAlias) : _ref;
     this.selectedRefs.push(ref);
+    return this;
   }
 
   /**
@@ -102,6 +94,7 @@ export class SelectBuilder {
    */
   selectColumnRef(columnRef) {
     this.selectedRefs.push(columnRef);
+    return this;
   }
 
   /**
@@ -111,10 +104,12 @@ export class SelectBuilder {
   selectAllColumns(_tableAlias) {
     const tableAlias = this.options.useTableAlias ? _tableAlias : null;
     this.selectedRefs.push(new ColumnRef(tableAlias, "*"));
+    return this;
   }
 
   distinct() {
     this.distinctFlag = true;
+    return this;
   }
 
   // /**
@@ -139,6 +134,7 @@ export class SelectBuilder {
       tableAlias,
       options,
     };
+    return this;
   }
 
   /**
@@ -147,6 +143,7 @@ export class SelectBuilder {
    */
   from(tableAlias) {
     this.fromTableAlias = tableAlias;
+    return this;
   }
 
   /**
@@ -154,6 +151,7 @@ export class SelectBuilder {
    */
   where(searchCondition) {
     this.searchCondition = searchCondition;
+    return this;
   }
 
   /**
@@ -177,6 +175,7 @@ export class SelectBuilder {
       tableAlias,
       searchCondition,
     });
+    return this;
   }
 
   /**
@@ -192,6 +191,7 @@ export class SelectBuilder {
       ref: new ColumnRef(tableAlias, tableColumn),
       order,
     });
+    return this;
   }
 
   /**
@@ -200,6 +200,7 @@ export class SelectBuilder {
    */
   orderByRef(ref, order) {
     this._orderByRefs.push({ ref, order });
+    return this;
   }
 
   /**
@@ -211,6 +212,7 @@ export class SelectBuilder {
   groupByColumn(_tableAlias, tableColumn) {
     const tableAlias = this.options.useTableAlias ? _tableAlias : null;
     this._groupByRefs.push(new ColumnRef(tableAlias, tableColumn));
+    return this;
   }
 
   /**
@@ -218,6 +220,7 @@ export class SelectBuilder {
    */
   groupByRef(...refs) {
     this._groupByRefs.push(...refs);
+    return this;
   }
 
   /**
@@ -225,6 +228,7 @@ export class SelectBuilder {
    */
   having(searchCondition) {
     this.havingSearchCondition = searchCondition;
+    return this;
   }
 
   // asSubquery() {
