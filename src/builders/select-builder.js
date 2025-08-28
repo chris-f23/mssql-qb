@@ -1,4 +1,12 @@
-import { AliasedRef, CalculatedRef, ColumnRef, Ref, SubqueryRef } from "../ref";
+import {
+  AliasedRef,
+  CalculatedRef,
+  ColumnRef,
+  OrderRef,
+  Ref,
+  SubqueryRef,
+  ValueRef,
+} from "../ref";
 import { TableDefinition } from "../table-definition";
 
 /**
@@ -11,7 +19,7 @@ export class SelectBuilder {
   /** @type {boolean} */
   distinctFlag = false;
 
-  /** @type {Array<{ ref: Ref; order?: "ASC" | "DESC" }>} */
+  /** @type {Array<OrderRef>} */
   _orderByRefs = [];
 
   /** @type {Array<Ref>} */
@@ -54,12 +62,11 @@ export class SelectBuilder {
    * @template {keyof TSource} TTableAlias
    * @template {TSource[TTableAlias]["columns"][number]} TTableColumn
    * @param {TTableAlias & string} _tableAlias
-   * @param {("*" | (TTableColumn & string))} tableColumn
-   * @param {string} [columnAlias]
+   * @param {(TTableColumn & string)} tableColumn
    */
-  getColumnRef(_tableAlias, tableColumn, columnAlias) {
+  getColumnRef(_tableAlias, tableColumn) {
     const tableAlias = this.options.useTableAlias ? _tableAlias : null;
-    return new ColumnRef(tableAlias, tableColumn, columnAlias);
+    return new ColumnRef(tableAlias, tableColumn);
   }
 
   /**
@@ -94,23 +101,40 @@ export class SelectBuilder {
     return this;
   }
 
+  // /**
+  //  * @param {CalculatedRef} _ref
+  //  * @param {string} [columnAlias]
+  //  */
+  // selectCalculatedRef(_ref, columnAlias) {
+  //   const ref = columnAlias ? new AliasedRef(_ref, columnAlias) : _ref;
+  //   this.selectedRefs.push(ref);
+  //   return this;
+  // }
+
   /**
-   * @param {CalculatedRef} _ref
-   * @param {string} [columnAlias]
+   * @param {Ref} ref
    */
-  selectCalculatedRef(_ref, columnAlias) {
-    const ref = columnAlias ? new AliasedRef(_ref, columnAlias) : _ref;
+  selectRef(ref) {
     this.selectedRefs.push(ref);
     return this;
   }
 
   /**
-   * @param {ColumnRef} columnRef
+   *
+   * @param  {...Ref} refs
    */
-  selectColumnRef(columnRef) {
-    this.selectedRefs.push(columnRef);
+  selectRefs(...refs) {
+    this.selectedRefs.push(...refs);
     return this;
   }
+
+  // /**
+  //  * @param {ColumnRef} columnRef
+  //  */
+  // selectColumnRef(columnRef) {
+  //   this.selectedRefs.push(columnRef);
+  //   return this;
+  // }
 
   /**
    * @template {keyof TSource} TTableAlias
@@ -202,19 +226,25 @@ export class SelectBuilder {
    */
   orderByColumn(_tableAlias, tableColumn, order) {
     const tableAlias = this.options.useTableAlias ? _tableAlias : null;
-    this._orderByRefs.push({
-      ref: new ColumnRef(tableAlias, tableColumn),
-      order,
-    });
+    this._orderByRefs.push(
+      new OrderRef(new ColumnRef(tableAlias, tableColumn), order)
+    );
     return this;
   }
 
   /**
-   * @param {ColumnRef|AliasedRef|CalculatedRef} ref
-   * @param {"ASC" | "DESC"} [order]
+   * @param {(ColumnRef|CalculatedRef|OrderRef)[]} orderRefs
    */
-  orderByRef(ref, order) {
-    this._orderByRefs.push({ ref, order });
+  orderByRefs(...orderRefs) {
+    for (const ref of orderRefs) {
+      if (ref instanceof OrderRef) {
+        this._orderByRefs.push(ref);
+      } else if ("alias" in ref && typeof ref.alias === "string") {
+        this._orderByRefs.push(new OrderRef(new Ref(ref.alias)));
+      } else {
+        this._orderByRefs.push(new OrderRef(ref));
+      }
+    }
     return this;
   }
 
@@ -231,9 +261,9 @@ export class SelectBuilder {
   }
 
   /**
-   * @param {(ColumnRef|AliasedRef|CalculatedRef)[]} refs
+   * @param {(ColumnRef|CalculatedRef)[]} refs
    */
-  groupByRef(...refs) {
+  groupByRefs(...refs) {
     this._groupByRefs.push(...refs);
     return this;
   }
@@ -335,21 +365,7 @@ export class SelectBuilder {
 
     if (this._orderByRefs.length > 0) {
       queryParts.push("ORDER BY");
-      queryParts.push(
-        this._orderByRefs
-          .map(({ ref, order }) => {
-            // const left = ref instanceof AliasedRef ? ref.alias : ref.build();
-            const _order = order ? ` ${order}` : "";
-
-            // return `${left}${_order}`;
-
-            if (ref instanceof ColumnRef && ref.alias) {
-              return `${ref.alias}${_order}`;
-            }
-            return `${ref.build()}${_order}`;
-          })
-          .join(", ")
-      );
+      queryParts.push(this._orderByRefs.map((ref) => ref.build()).join(", "));
     }
 
     return queryParts.join(" ");

@@ -81,7 +81,7 @@ describe("SelectBuilder", () => {
   it("C1. Should select the number of different countries from Customer table", () => {
     const expectedQuery = "SELECT COUNT(DISTINCT Country) FROM Customer";
 
-    const selectBuilder = new SelectBuilder(
+    const sb = new SelectBuilder(
       { c: customerTable },
       {
         useDatabaseName: false,
@@ -89,13 +89,16 @@ describe("SelectBuilder", () => {
         useTableAlias: false,
       }
     );
+    const countryRef = sb.getColumnRef("c", "Country");
 
-    selectBuilder.distinct();
-    const countryRef = selectBuilder.getColumnRef("c", "Country");
-
-    selectBuilder.selectCalculatedRef(Fn.COUNT(countryRef));
-    selectBuilder.from("c");
-    const generatedQuery = selectBuilder.build();
+    sb.selectRef(
+      Fn.COUNT({
+        expression: countryRef,
+        distinct: true,
+      })
+    );
+    sb.from("c");
+    const generatedQuery = sb.build();
 
     expect(generatedQuery).toEqual(expectedQuery);
   });
@@ -171,7 +174,7 @@ describe("SelectBuilder", () => {
     const expectedQuery =
       "SELECT p.name, p.color, p.price FROM Production.Product AS p ORDER BY p.name ASC, p.color ASC";
 
-    const sb = new SelectBuilder(
+    const sb1 = new SelectBuilder(
       { p: productTable },
       {
         useDatabaseName: false,
@@ -181,7 +184,7 @@ describe("SelectBuilder", () => {
     );
 
     expect(
-      sb
+      sb1
         .selectColumn("p", "name")
         .selectColumn("p", "color")
         .selectColumn("p", "price")
@@ -191,8 +194,17 @@ describe("SelectBuilder", () => {
         .build()
     ).toEqual(expectedQuery);
 
+    const sb2 = new SelectBuilder(
+      { p: productTable },
+      {
+        useDatabaseName: false,
+        useSchemaName: true,
+        useTableAlias: true,
+      }
+    );
+
     expect(
-      sb
+      sb2
         .selectColumns("p", ["name", "color", "price"])
         .from("p")
         .orderByColumn("p", "name", "ASC")

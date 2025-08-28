@@ -27,6 +27,14 @@ export class Ref {
   build() {
     return this.value;
   }
+
+  ascending() {
+    return new OrderRef(this, "ASC");
+  }
+
+  descending() {
+    return new OrderRef(this, "DESC");
+  }
 }
 
 /**
@@ -48,7 +56,8 @@ export class ValueRef extends Ref {
    * @param {string} alias
    */
   as(alias) {
-    return new Ref(`${this.value} AS ${alias}`);
+    return new AliasedRef(this, alias);
+    // return new Ref(`${this.value} AS ${alias}`);
   }
 
   /**
@@ -177,6 +186,30 @@ export class ValueRef extends Ref {
       otherValue instanceof Ref ? otherValue : new LiteralRef(otherValue);
 
     return CalculatedRef.divide(this, otherValueRef);
+  }
+}
+
+/**
+ * @template {Ref} T
+ */
+export class OrderRef extends Ref {
+  order;
+
+  /**
+   * @param {T} ref
+   * @param {"ASC" | "DESC"} [order]
+   */
+  constructor(ref, order) {
+    super(ref.build());
+    this.order = order;
+    this.ref = ref;
+  }
+
+  build() {
+    if (this.ref instanceof AliasedRef) {
+      return `${this.ref.alias} ${this.order ? this.order : ""}`.trim();
+    }
+    return `${super.build()} ${this.order ? this.order : ""}`.trim();
   }
 }
 

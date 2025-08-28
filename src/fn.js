@@ -1,4 +1,4 @@
-import { ValueRef, LiteralRef } from "./ref";
+import { ValueRef, LiteralRef, Ref } from "./ref";
 
 export class Fn {
   /**
@@ -19,10 +19,16 @@ export class Fn {
   }
 
   /**
-   * @param {ValueRef} ref
+   * @param {object} options
+   * @param {boolean} [options.distinct]
+   * @param {Ref | "*"} options.expression
    */
-  static COUNT(ref) {
-    return new ValueRef(`COUNT(${ref.build()})`);
+  static COUNT({ distinct, expression }) {
+    const distinctPart = distinct === true ? "DISTINCT " : "";
+    const expressionPart =
+      expression instanceof Ref ? expression.build() : expression;
+
+    return new ValueRef(`COUNT(${distinctPart}${expressionPart})`);
   }
 
   /**

@@ -154,25 +154,25 @@ describe("QueryFactory", () => {
           // Referencias
           const nonDiscountSalesRef = qb
             .getColumnRef("sod", "OrderQty")
-            .multipliedBy(qb.getColumnRef("sod", "UnitPrice"));
+            .multipliedBy(qb.getColumnRef("sod", "UnitPrice"))
+            .as("NonDiscountSales");
 
           const discountsRef = qb
             .getColumnRef("sod", "OrderQty")
             .multipliedBy(qb.getColumnRef("sod", "UnitPrice"))
-            .multipliedBy(qb.getColumnRef("sod", "UnitPriceDiscount"));
+            .multipliedBy(qb.getColumnRef("sod", "UnitPriceDiscount"))
+            .as("Discounts");
 
-          const productNameRef = qb.getColumnRef("p", "Name", "ProductName");
+          const productNameRef = qb.getColumnRef("p", "Name").as("ProductName");
 
           const isSameProductId = qb
             .getColumnRef("p", "ProductID")
             .isEqualTo(qb.getColumnRef("sod", "ProductID"));
 
-          qb.selectColumnRef(productNameRef);
-          qb.selectCalculatedRef(nonDiscountSalesRef, "NonDiscountSales");
-          qb.selectCalculatedRef(discountsRef, "Discounts");
+          qb.selectRefs(productNameRef, nonDiscountSalesRef, discountsRef);
           qb.from("p");
           qb.innerJoin("sod", isSameProductId);
-          qb.orderByRef(productNameRef, "DESC");
+          qb.orderByRefs(productNameRef.descending());
         }
       );
 
@@ -383,7 +383,7 @@ describe("QueryFactory", () => {
 
     it("F. Use GROUP BY", () => {
       const expectedQuery =
-        "SELECT p.Name, COUNT(p.*) AS ProductCount " +
+        "SELECT p.Name, COUNT(*) AS ProductCount " +
         "FROM Production.Product AS p " +
         "GROUP BY p.Name";
 
@@ -396,13 +396,14 @@ describe("QueryFactory", () => {
         (qb) => {
           // Referencias
           const nameRef = qb.getColumnRef("p", "Name");
-          const productCountRef = Fn.COUNT(qb.getColumnRef("p", "*"));
+          const productCountRef = Fn.COUNT({ expression: "*" }).as(
+            "ProductCount"
+          );
 
           // Query
-          qb.selectCalculatedRef(nameRef);
-          qb.selectCalculatedRef(productCountRef, "ProductCount");
+          qb.selectRefs(nameRef, productCountRef);
           qb.from("p");
-          qb.groupByRef(nameRef);
+          qb.groupByRefs(nameRef);
         }
       );
 
@@ -427,15 +428,16 @@ describe("QueryFactory", () => {
         (qb) => {
           // Referencias
           const productModelIdRef = qb.getColumnRef("p", "ProductModelID");
-          const averageListPriceRef = Fn.AVG(qb.getColumnRef("p", "ListPrice"));
+          const averageListPriceRef = Fn.AVG(
+            qb.getColumnRef("p", "ListPrice")
+          ).as("[Average List Price]");
 
           // Query
-          qb.selectCalculatedRef(productModelIdRef);
-          qb.selectCalculatedRef(averageListPriceRef, "[Average List Price]");
+          qb.selectRefs(productModelIdRef, averageListPriceRef);
           qb.from("p");
           qb.where(qb.getColumnRef("p", "ListPrice").isGreaterThan(1000));
-          qb.groupByRef(productModelIdRef);
-          qb.orderByRef(productModelIdRef);
+          qb.groupByRefs(productModelIdRef);
+          qb.orderByRefs(productModelIdRef);
         }
       );
 
@@ -460,17 +462,18 @@ describe("QueryFactory", () => {
           (qb) => {
             const averageQuantityRef = Fn.AVG(
               qb.getColumnRef("sod", "OrderQty")
-            );
+            ).as("[Average Quantity]");
+
             const nonDiscountSalesRef = qb
               .getColumnRef("sod", "OrderQty")
               .multipliedBy(qb.getColumnRef("sod", "UnitPrice"));
 
             // Query
-            qb.selectCalculatedRef(averageQuantityRef, "[Average Quantity]");
-            qb.selectCalculatedRef(nonDiscountSalesRef, "NonDiscountSales");
+            qb.selectRef(averageQuantityRef);
+            qb.selectRef(nonDiscountSalesRef.as("NonDiscountSales"));
             qb.from("sod");
-            qb.groupByRef(nonDiscountSalesRef);
-            qb.orderByRef(nonDiscountSalesRef, "DESC");
+            qb.groupByRefs(nonDiscountSalesRef);
+            qb.orderByRefs(nonDiscountSalesRef.descending());
           }
         );
 
@@ -497,14 +500,16 @@ describe("QueryFactory", () => {
             // Referencias
             const productIdRef = qb.getColumnRef("sod", "ProductID");
             const averagePriceRef = Fn.AVG(qb.getColumnRef("sod", "UnitPrice"));
+            const isOrderQtyGreaterThan10 = qb
+              .getColumnRef("sod", "OrderQty")
+              .isGreaterThan(10);
 
             // Query
-            qb.selectCalculatedRef(productIdRef);
-            qb.selectCalculatedRef(averagePriceRef, "[Average Price]");
+            qb.selectRefs(productIdRef, averagePriceRef.as("[Average Price]"));
             qb.from("sod");
-            qb.where(qb.getColumnRef("sod", "OrderQty").isGreaterThan(10));
-            qb.groupByRef(productIdRef);
-            qb.orderByRef(averagePriceRef);
+            qb.where(isOrderQtyGreaterThan10);
+            qb.groupByRefs(productIdRef);
+            qb.orderByRefs(averagePriceRef);
           }
         );
 
@@ -534,11 +539,11 @@ describe("QueryFactory", () => {
             );
 
             // Query
-            qb.selectCalculatedRef(productIdRef);
+            qb.selectRef(productIdRef);
             qb.from("sod");
-            qb.groupByRef(productIdRef);
+            qb.groupByRefs(productIdRef);
             qb.having(averageOrderQtyRef.isGreaterThan(5));
-            qb.orderByRef(productIdRef);
+            qb.orderByRefs(productIdRef);
           }
         );
 
@@ -569,12 +574,11 @@ describe("QueryFactory", () => {
             );
 
             // Query
-            qb.selectCalculatedRef(salesOrderIdRef);
-            qb.selectCalculatedRef(carrierTrackingNumberRef);
+            qb.selectRefs(salesOrderIdRef, carrierTrackingNumberRef);
             qb.from("sod");
-            qb.groupByRef(salesOrderIdRef, carrierTrackingNumberRef);
+            qb.groupByRefs(salesOrderIdRef, carrierTrackingNumberRef);
             qb.having(carrierTrackingNumberRef.isLike("4BD%"));
-            qb.orderByRef(salesOrderIdRef);
+            qb.orderByRefs(salesOrderIdRef);
           }
         );
 
@@ -606,12 +610,12 @@ describe("QueryFactory", () => {
             const unitPriceRef = qb.getColumnRef("sod", "UnitPrice");
 
             // Query
-            qb.selectCalculatedRef(productIdRef);
+            qb.selectRef(productIdRef);
             qb.from("sod");
             qb.where(unitPriceRef.isLessThan(25));
-            qb.groupByRef(productIdRef);
+            qb.groupByRefs(productIdRef);
             qb.having(averageOrderQtyRef.isGreaterThan(5));
-            qb.orderByRef(productIdRef);
+            qb.orderByRefs(productIdRef);
           }
         );
 
